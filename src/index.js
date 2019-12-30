@@ -4,7 +4,7 @@ const webapp = require('./middleware/webapp');
 // TODOS:
 // * auto reload in dev
 // * view style scoping
-// * typescript, prettier config
+// * typescript
 // * docker config
 
 const app = express();

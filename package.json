@@ -9,7 +9,8 @@
     "url": "https://github.com/kganser/webapp.git"
   },
   "scripts": {
-    "format": "prettier --write 'src/**/*.js'",
+    "format": "eslint --fix 'src/**/*.js'",
+    "lint": "eslint 'src/**/*.js'",
     "start": "node src/index.js"
   },
   "engines": {

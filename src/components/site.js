@@ -1,9 +1,10 @@
 exports.includes = {
   scripts: [
     '//unpkg.com/react@16/umd/react.development.js',
-    '//unpkg.com/react-dom@16/umd/react-dom.development.js',
+    '//unpkg.com/react-dom@16/umd/react-dom.development.js'
   ]
 };
+/* eslint-disable prettier/prettier */
 exports.component = ({components}) => ({title, description, styles, scripts, view, props}) => {
   return ['html',
     ['head',

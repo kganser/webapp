@@ -69,7 +69,9 @@ const css = styles => {
     .reduce((rules, selector) => {
       const properties = styles[selector];
       return rules.concat(
-        selector.startsWith('@media ') ? selector + '{' + css(properties) + '}' : rule(selector, properties)
+        selector.startsWith('@media ')
+          ? selector + '{' + css(properties) + '}'
+          : rule(selector, properties)
       );
     }, [])
     .join('');
@@ -92,26 +94,36 @@ const site = (components, config, jsx) => ({
       const render = component(this);
       components[name] = props => jsx(render(props));
     });
-    if (root) ReactDOM.hydrate(React.createElement(components[component], props), document.getElementById(root));
+    if (root)
+      ReactDOM.hydrate(
+        React.createElement(components[component], props),
+        document.getElementById(root)
+      );
     return this;
   }
 });
 
-module.exports = config => {
+module.exports = (config, options) => {
+  const {componentsDir = 'components', assetsTTL = 86400} = options || {};
+
   const script = (name, component) => {
     // TODO: babel transform (& sourcemap)
-    if (name == 'site') return 'Site = (' + site + ')({}, ' + JSON.stringify(config) + ', ' + jsx + ');';
+    if (name == 'site')
+      return 'Site = (' + site + ')({}, ' + JSON.stringify(config) + ', ' + jsx + ');';
     return 'Site.components[' + JSON.stringify(name) + '] = ' + component + ';';
   };
 
-  // TODO: configurable components dir?
-  const views = fs.readdirSync(path.join(__dirname, '../components'), {withFileTypes: true}).reduce((views, entry) => {
-    if (entry.isFile) {
-      const name = entry.name.replace(/\.js$/, '');
-      views[name] = require('../components/' + name);
-    }
-    return views;
-  }, {});
+  const views = fs
+    .readdirSync(path.join(__dirname, '..', componentsDir), {
+      withFileTypes: true
+    })
+    .reduce((views, entry) => {
+      if (entry.isFile) {
+        const name = entry.name.replace(/\.js$/, '');
+        views[name] = require('../' + componentsDir + '/' + name);
+      }
+      return views;
+    }, {});
 
   const {components} = site(
     Object.entries(views).reduce((views, [name, view]) => ({...views, [name]: view.component}), {}),
@@ -121,51 +133,65 @@ module.exports = config => {
 
   return (req, res, next) => {
     const asset =
-      req.path.match(/^\/(css)\/([^\.]+)\.([^\.]+)\.css$/) || req.path.match(/^\/(js)\/([^\.]+)\.([^\.]+)\.js$/);
+      req.path.match(/^\/(css)\/([^\.]+)\.([^\.]+)\.css$/) ||
+      req.path.match(/^\/(js)\/([^\.]+)\.([^\.]+)\.js$/);
     if (asset) {
       const [_, type, view, hash] = asset;
-      let value = (views[view] || {})[type == 'js' ? 'component' : 'styles'];
+      const js = type == 'js';
+      let value = (views[view] || {})[js ? 'component' : 'styles'];
       if (!value) return res.sendStatus(404);
-      value = type == 'js' ? script(view, value) : css(value);
-      if (sha1(value) != hash) return res.sendStatus(400);
-      res.type(type).end(value);
-    } else {
-      res.render = (view, {meta, ...props}) => {
-        const ids = ['site'].concat(view);
-        const assets = {};
-        ids.forEach(function add(name) {
-          if (assets[name]) return;
-          const {component, styles, includes = {}, dependencies = []} = views[name];
-          assets[name] = {
-            styles: (styles ? ['/css/' + name + '.' + sha1(css(styles)) + '.css'] : []).concat(includes.styles || []),
-            scripts: ['/js/' + name + '.' + sha1(script(name, component)) + '.js'].concat(includes.scripts || [])
-          };
-          dependencies.forEach(add);
-        });
-        res.end(
-          '<!doctype html>' +
-            ReactDOM.renderToStaticMarkup(
-              jsx([
-                components.site,
-                {
-                  ...meta,
-                  view: ids[1],
-                  props,
-                  styles: Array.from(
-                    new Set(Object.values(assets).reduce((urls, {styles}) => urls.concat(styles), []))
-                  ),
-                  scripts: Array.from(
-                    new Set(Object.values(assets).reduce((urls, {scripts}) => urls.concat(scripts), []))
-                  )
-                }
-              ])
-            )
-        );
-      };
-      res.renderPage = (view, {meta, ...props}) => {
-        res.render(['page', view], {meta, view, props});
-      };
-      next();
+      value = js ? script(view, value) : css(value);
+      return sha1(value) == hash
+        ? res
+            .set({
+              'Content-Type': js ? 'text/javascript' : 'text/css',
+              'Cache-Control': 'max-age=' + assetsTTL,
+              ETag: hash
+            })
+            .end(value)
+        : res.sendStatus(400);
     }
+    res.render = (view, {meta, ...props}) => {
+      const ids = ['site'].concat(view);
+      const assets = {};
+      ids.forEach(function add(name) {
+        if (assets[name]) return;
+        const {component, styles, includes = {}, dependencies = []} = views[name];
+        assets[name] = {
+          styles: (styles ? ['/css/' + name + '.' + sha1(css(styles)) + '.css'] : []).concat(
+            includes.styles || []
+          ),
+          scripts: ['/js/' + name + '.' + sha1(script(name, component)) + '.js'].concat(
+            includes.scripts || []
+          )
+        };
+        dependencies.forEach(add);
+      });
+      res.end(
+        '<!doctype html>' +
+          ReactDOM.renderToStaticMarkup(
+            jsx([
+              components.site,
+              {
+                ...meta,
+                view: ids[1],
+                props,
+                styles: Array.from(
+                  new Set(Object.values(assets).reduce((urls, {styles}) => urls.concat(styles), []))
+                ),
+                scripts: Array.from(
+                  new Set(
+                    Object.values(assets).reduce((urls, {scripts}) => urls.concat(scripts), [])
+                  )
+                )
+              }
+            ])
+          )
+      );
+    };
+    res.renderPage = (view, {meta, ...props}) => {
+      res.render(['page', view], {meta, view, props});
+    };
+    next();
   };
 };
