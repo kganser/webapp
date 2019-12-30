@@ -1,5 +1,5 @@
 const express = require('express');
-const webapp = require('./src/middleware/webapp');
+const webapp = require('./middleware/webapp');
 
 // TODOS:
 // * auto reload in dev
@@ -18,8 +18,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/about', (req, res) => {
-  res.renderPage('about', {meta: {title: 'About'}})
-})
+  res.renderPage('about', {meta: {title: 'About'}});
+});
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);

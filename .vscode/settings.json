@@ -1,0 +1,9 @@
+{
+  "editor.tabSize": 2,
+  "editor.wordWrapColumn": 120,
+  "eslint.format.enable": true,
+  "javascript.validate.enable": false,
+	"[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  }
+}
