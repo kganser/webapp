@@ -1,6 +1,10 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const babel = require('@babel/core');
 const React = require('react');
 const ReactDOM = require('react-dom/server');
 
@@ -104,13 +108,20 @@ const site = (components, config, jsx) => ({
 });
 
 module.exports = (config, options) => {
-  const {componentsDir = 'components', assetsTTL = 86400} = options || {};
+  const {assetsTTL = 86400, componentsDir = 'components', dev} = options || {};
 
   const script = (name, component) => {
-    // TODO: babel transform (& sourcemap)
-    if (name == 'site')
-      return 'Site = (' + site + ')({}, ' + JSON.stringify(config) + ', ' + jsx + ');';
-    return 'Site.components[' + JSON.stringify(name) + '] = ' + component + ';';
+    const code =
+      name == 'site'
+        ? 'window.Site = (' + site + ')({}, ' + JSON.stringify(config) + ', ' + jsx + ');'
+        : 'window.Site.components[' + JSON.stringify(name) + '] = ' + component + ';';
+    return babel.transformSync(code, {
+      comments: dev,
+      presets: [['@babel/preset-env', {targets: '> 0.25%, not dead'}]], // {exclude: ['transform-typeof-symbol']}
+      minified: !dev,
+      sourceFileName: '/js/' + name + '.js',
+      sourceMaps: dev && 'inline'
+    }).code;
   };
 
   const views = fs
@@ -131,26 +142,11 @@ module.exports = (config, options) => {
     jsx
   ).init();
 
-  return (req, res, next) => {
-    const asset =
-      req.path.match(/^\/(css)\/([^\.]+)\.([^\.]+)\.css$/) ||
-      req.path.match(/^\/(js)\/([^\.]+)\.([^\.]+)\.js$/);
-    if (asset) {
-      const [_, type, view, hash] = asset;
-      const js = type == 'js';
-      let value = (views[view] || {})[js ? 'component' : 'styles'];
-      if (!value) return res.sendStatus(404);
-      value = js ? script(view, value) : css(value);
-      return sha1(value) == hash
-        ? res
-            .set({
-              'Content-Type': js ? 'text/javascript' : 'text/css',
-              'Cache-Control': 'max-age=' + assetsTTL,
-              ETag: hash
-            })
-            .end(value)
-        : res.sendStatus(400);
-    }
+  const router = express.Router();
+  router.use(bodyParser.urlencoded({extended: false}));
+  router.use(cookieParser());
+
+  router.use((req, res, next) => {
     res.render = (view, {meta, ...props}) => {
       const ids = ['site'].concat(view);
       const assets = {};
@@ -190,8 +186,61 @@ module.exports = (config, options) => {
       );
     };
     res.renderPage = (view, {meta, ...props}) => {
-      res.render(['page', view], {meta, view, props});
+      let message = req.cookies.message;
+      if (message && /^[es]:/.test(message)) {
+        message = {
+          type: {e: 'danger', s: 'success'}[message[0]],
+          text: message.substr(2)
+        };
+        res.clearCookie('message');
+      }
+      res.render(['page', view], {meta, view, login: req.login, message, props});
+    };
+    res.error = (message, path) => {
+      res.cookie('message', 'e:' + message).redirect(path || req.path);
+    };
+    res.success = (message, path) => {
+      res.cookie('message', 's:' + message).redirect(path || req.path);
     };
     next();
-  };
+  });
+
+  router.get('/css/:view.:hash.css', (req, res) => {
+    const {view, hash} = req.params;
+    let value = (views[view] || {}).styles;
+    if (!value) return res.sendStatus(404);
+    value = css(value);
+    return sha1(value) == hash
+      ? res
+          .set({
+            'Content-Type': 'text/css',
+            'Cache-Control': 'max-age=' + assetsTTL,
+            ETag: hash
+          })
+          .end(value)
+      : res.sendStatus(400);
+  });
+
+  router.get('/js/:view.:hash.js', (req, res) => {
+    const {view, hash} = req.params;
+    let value = (views[view] || {}).component;
+    if (!value) return res.sendStatus(404);
+    value = script(view, value);
+    return sha1(value) == hash
+      ? res
+          .set({
+            'Content-Type': 'text/javascript',
+            'Cache-Control': 'max-age=' + assetsTTL,
+            ETag: hash
+          })
+          .end(value)
+      : res.sendStatus(400);
+  });
+
+  router.get('/static/:file', (req, res) => {
+    // TODO: validate path; add content-type, etag headers
+    fs.createReadStream(path.join(__dirname, '..', req.path)).pipe(res);
+  });
+
+  return router;
 };

@@ -3,7 +3,7 @@
   "editor.wordWrapColumn": 100,
   "eslint.format.enable": true,
   "javascript.validate.enable": false,
-	"[javascript]": {
+  "[javascript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   }
 }
