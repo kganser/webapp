@@ -18,5 +18,8 @@
         "--cluster=main"
       ]
     }
+  ],
+  "images": [
+    "gcr.io/$PROJECT_ID/webapp"
   ]
 }
