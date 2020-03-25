@@ -17,4 +17,4 @@ spec:
     spec:
       containers:
       - name: "webapp"
-        image: "webapp:latest"
+        image: "gcr.io/simpl-js/webapp:latest"

@@ -20,7 +20,6 @@
       "name": "gcr.io/cloud-builders/gke-deploy:stable",
       "args": [
         "run",
-        "--image=gcr.io/$PROJECT_ID/webapp:latest",
         "--filename=kubernetes.yml",
         "--location=us-central1-a",
         "--cluster=main"
