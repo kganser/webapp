@@ -10,6 +10,13 @@
       ]
     },
     {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "push",
+        "gcr.io/$PROJECT_ID/webapp"
+      ]
+    },
+    {
       "name": "gcr.io/cloud-builders/gke-deploy:stable",
       "args": [
         "run",
