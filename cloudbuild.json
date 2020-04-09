@@ -5,8 +5,15 @@
       "args": [
         "build",
         "-t",
-        "gcr.io/$PROJECT_ID/webapp",
+        "gcr.io/$PROJECT_ID/webapp:$COMMIT_SHA",
         "."
+      ]
+    },
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "push",
+        "gcr.io/$PROJECT_ID/webapp:$COMMIT_SHA"
       ]
     },
     {
@@ -14,9 +21,13 @@
       "args": [
         "run",
         "--filename=kubernetes.yml",
+        "--image=gcr.io/simpl-js/webapp:$COMMIT_SHA",
         "--location=us-central1-a",
         "--cluster=main"
       ]
     }
+  ],
+  "images": [
+    "gcr.io/$PROJECT_ID/webapp"
   ]
 }

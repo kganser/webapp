@@ -162,6 +162,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+app.listen(80, () => {
+  console.log(`Server listening on port 80`);
 });
