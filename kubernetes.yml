@@ -15,6 +15,7 @@ spec:
       labels:
         app: "webapp"
     spec:
+      hostNetwork: true
       containers:
       - name: "webapp"
-        image: "gcr.io/simpl-js/webapp:latest"
+        image: "gcr.io/simpl-js/webapp"
