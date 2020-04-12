@@ -58,10 +58,10 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const {name, email, password} = req.body;
+  const path = 'users/' + encodeURIComponent(email);
   try {
     if (!email) throw new Error('Invalid email');
     if (!password) throw new Error('Invalid password');
-    const path = 'users/' + encodeURIComponent(email);
     await db.get(path);
     throw new Error('An account with this email address already exists');
   } catch (e) {
