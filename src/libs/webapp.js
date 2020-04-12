@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const babel = require('@babel/core');
 const React = require('react');
 const ReactDOM = require('react-dom/server');
+const {base64Mac, base64Url, jwt} = require('./util');
 
 function jsx(node) {
   // node := [type, props, node*]
@@ -30,7 +31,7 @@ function jsx(node) {
   return React.createElement.apply(null, [type, props].concat(children.map(jsx)));
 }
 
-const css = styles => {
+function css(styles) {
   // styles     := { rule* }
   // rule       := selector : properties
   // properties := { (property|rule)* }
@@ -79,18 +80,24 @@ const css = styles => {
       );
     }, [])
     .join('');
-};
+}
 
-const sha1 = string =>
-  crypto
-    .createHash('sha256')
-    .update(string)
-    .digest('base64')
-    .substr(0, 8)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
+const safeJSON = data =>
+  JSON.stringify(data).replace(
+    /[<\u2028\u2029]/g,
+    char => ({'<': '\\u003C', '\u2028': '\\u2028', '\u2029': '\\u2029'}[char])
+  );
 
-const site = (components, config, jsx) => ({
+const shortHash = string =>
+  base64Url(
+    crypto
+      .createHash('sha256')
+      .update(string)
+      .digest()
+  ).substr(0, 8);
+
+const site = (React, components, config, jsx) => ({
+  React,
   config,
   components,
   init: function(root, component, props) {
@@ -103,40 +110,79 @@ const site = (components, config, jsx) => ({
         React.createElement(components[component], props),
         document.getElementById(root)
       );
+    this.init = null;
     return this;
   }
 });
 
-module.exports = (config, options) => {
-  const {assetsTTL = 86400, componentsDir = 'components', dev} = options || {};
-
+module.exports = ({
+  assetsTTL = 86400,
+  config = {},
+  sessionKey,
+  sessionCookie = 'auth',
+  messageCookie = 'message',
+  projectDir = 'src',
+  componentsDir = 'components',
+  staticDir = 'static',
+  pageComponent = 'page',
+  siteComponent = 'site',
+  dev
+}) => {
   const script = (name, component) => {
     const code =
-      name == 'site'
-        ? 'window.Site = (' + site + ')({}, ' + JSON.stringify(config) + ', ' + jsx + ');'
-        : 'window.Site.components[' + JSON.stringify(name) + '] = ' + component + ';';
+      name == siteComponent
+        ? `window.Site = (${site})(React, {}, ${JSON.stringify(config)}, ${jsx});`
+        : `window.Site.components[${JSON.stringify(name)}] = ${component};`;
     return babel.transformSync(code, {
       comments: dev,
-      presets: [['@babel/preset-env', {targets: '> 0.25%, not dead'}]], // {exclude: ['transform-typeof-symbol']}
+      presets: [['@babel/preset-env', {targets: '> 0.25%, not dead'}]],
       minified: !dev,
-      sourceFileName: '/js/' + name + '.js',
+      sourceFileName: `/js/${name}.js`,
       sourceMaps: dev && 'inline'
     }).code;
   };
 
-  const views = fs
-    .readdirSync(path.join(__dirname, '..', componentsDir), {
-      withFileTypes: true
-    })
-    .reduce((views, entry) => {
+  const componentsPath = path.resolve(projectDir, componentsDir);
+  const views = fs.readdirSync(componentsPath, {withFileTypes: true}).reduce(
+    (views, entry) => {
       if (entry.isFile) {
         const name = entry.name.replace(/\.js$/, '');
-        views[name] = require('../' + componentsDir + '/' + name);
+        views[name] = require(`${componentsPath}/${name}`);
       }
       return views;
-    }, {});
+    },
+    /* eslint-disable prettier/prettier */
+    {
+      site: {
+        component: ({components}) => ({title, description, styles, scripts, view, props}) => (
+          ['html',
+            ['head',
+              ['title', title],
+              ['meta', {charSet: 'utf-8'}],
+              ['meta', {name: 'viewport', content: 'width=device-width, initial-scale=1.0, user-scalable=no'}],
+              ['meta', {name: 'description', content: description}],
+              ...styles.map(href => ['link', {rel: 'stylesheet', href}])
+            ],
+            ['body',
+              ['div', {id: 'root'},
+                [components[view], props]
+              ],
+              ...scripts.map(src => ['script', {src}]),
+              ['script', {
+                dangerouslySetInnerHTML: {
+                  __html: `Site.init(${['root', view, props].map(safeJSON).join()});`
+                }
+              }]
+            ]
+          ]
+        )
+      }
+    }
+    /* eslint-enable prettier/prettier */
+  );
 
   const {components} = site(
+    React,
     Object.entries(views).reduce((views, [name, view]) => ({...views, [name]: view.component}), {}),
     config,
     jsx
@@ -148,26 +194,27 @@ module.exports = (config, options) => {
 
   router.use((req, res, next) => {
     res.render = (view, {meta, ...props}) => {
-      const ids = ['site'].concat(view);
+      const ids = [siteComponent].concat(view);
       const assets = {};
       ids.forEach(function add(name) {
-        if (assets[name]) return;
+        if (assets[name] || !views[name]) return;
         const {component, styles, includes = {}, dependencies = []} = views[name];
         assets[name] = {
-          styles: (styles ? ['/css/' + name + '.' + sha1(css(styles)) + '.css'] : []).concat(
+          styles: (styles ? [`/css/${name}.${shortHash(css(styles))}.css`] : []).concat(
             includes.styles || []
           ),
-          scripts: ['/js/' + name + '.' + sha1(script(name, component)) + '.js'].concat(
+          scripts: [`/js/${name}.${shortHash(script(name, component))}.js`].concat(
             includes.scripts || []
           )
         };
         dependencies.forEach(add);
       });
+      const tag = dev ? 'development' : 'production.min';
       res.end(
         '<!doctype html>' +
           ReactDOM.renderToStaticMarkup(
             jsx([
-              components.site,
+              components[siteComponent],
               {
                 ...meta,
                 view: ids[1],
@@ -177,7 +224,10 @@ module.exports = (config, options) => {
                 ),
                 scripts: Array.from(
                   new Set(
-                    Object.values(assets).reduce((urls, {scripts}) => urls.concat(scripts), [])
+                    Object.values(assets).reduce((urls, {scripts}) => urls.concat(scripts), [
+                      `//unpkg.com/react@16/umd/react.${tag}.js`,
+                      `//unpkg.com/react-dom@16/umd/react-dom.${tag}.js`
+                    ])
                   )
                 )
               }
@@ -186,22 +236,32 @@ module.exports = (config, options) => {
       );
     };
     res.renderPage = (view, {meta, ...props}) => {
-      let message = req.cookies.message;
-      if (message && /^[es]:/.test(message)) {
-        message = {
-          type: {e: 'danger', s: 'success'}[message[0]],
-          text: message.substr(2)
-        };
-        res.clearCookie('message');
+      const {login, message} = req;
+      if (message) res.clearCookie(messageCookie);
+      res.render([pageComponent, view], {meta, view, login, message, props});
+    };
+    res.logIn = data => res.cookie(sessionCookie, jwt(sessionKey, data));
+    res.logOut = () => res.clearCookie(sessionCookie);
+    res.error = (message, path) => res.cookie(messageCookie, `e:${message}`);
+    res.success = (message, path) => res.cookie(messageCookie, `s:${message}`);
+
+    req.token = req.cookies[sessionCookie];
+    if (req.token) {
+      const parts = req.token.split('.');
+      if (parts.length == 3 && base64Mac(sessionKey, parts[0] + '.' + parts[1]) == parts[2]) {
+        // TODO: login exp (iat + ttl)
+        req.login = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
       }
-      res.render(['page', view], {meta, view, login: req.login, message, props});
-    };
-    res.error = (message, path) => {
-      res.cookie('message', 'e:' + message).redirect(path || req.path);
-    };
-    res.success = (message, path) => {
-      res.cookie('message', 's:' + message).redirect(path || req.path);
-    };
+    }
+
+    const message = req.cookies[messageCookie];
+    if (/^[es]:/.test(message)) {
+      req.message = {
+        type: {e: 'danger', s: 'success'}[message[0]],
+        text: message.substr(2)
+      };
+    }
+
     next();
   });
 
@@ -210,11 +270,11 @@ module.exports = (config, options) => {
     let value = (views[view] || {}).styles;
     if (!value) return res.sendStatus(404);
     value = css(value);
-    return sha1(value) == hash
+    return shortHash(value) == hash
       ? res
           .set({
             'Content-Type': 'text/css',
-            'Cache-Control': 'max-age=' + assetsTTL,
+            'Cache-Control': `max-age=${assetsTTL}`,
             ETag: hash
           })
           .end(value)
@@ -226,11 +286,11 @@ module.exports = (config, options) => {
     let value = (views[view] || {}).component;
     if (!value) return res.sendStatus(404);
     value = script(view, value);
-    return sha1(value) == hash
+    return shortHash(value) == hash
       ? res
           .set({
             'Content-Type': 'text/javascript',
-            'Cache-Control': 'max-age=' + assetsTTL,
+            'Cache-Control': `max-age=${assetsTTL}`,
             ETag: hash
           })
           .end(value)
@@ -239,7 +299,7 @@ module.exports = (config, options) => {
 
   router.get('/static/:file', (req, res) => {
     // TODO: validate path; add content-type, etag headers
-    fs.createReadStream(path.join(__dirname, '..', req.path)).pipe(res);
+    fs.createReadStream(path.join(projectDir, staticDir, req.params.file)).pipe(res);
   });
 
   return router;

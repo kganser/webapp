@@ -41,6 +41,14 @@
     "ignorePatterns": [
       "src/static/"
     ],
+    "overrides": [
+      {
+        "files": "src/components/*",
+        "rules": {
+          "prettier/prettier": "off"
+        }
+      }
+    ],
     "parserOptions": {
       "ecmaFeatures": {
         "globalReturn": true

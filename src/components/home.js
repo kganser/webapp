@@ -1,6 +1,4 @@
-const React = require('react');
-
-exports.component = () => props => {
+exports.component = ({React}) => props => {
   const [count, setCount] = React.useState(0);
 
   return [

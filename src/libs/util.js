@@ -30,12 +30,12 @@ const pbkdf2 = (password, salt, iterations) =>
     });
   });
 
-const passwordHash = password => pbkdf2(password, crypto.randomBytes(32), 20000);
+const hashPassword = password => pbkdf2(password, crypto.randomBytes(32), 20000);
 
-const passwordVerify = async (password, hash) => {
+const verifyPassword = async (password, hash) => {
   const [spec, salt] = hash.split('.'); // pbkdf2_sha256_20000.[salt].[digest]
   const result = await pbkdf2(password, Buffer.from(salt, 'base64'), +spec.split('_')[2]);
   return result == hash;
 };
 
-module.exports = {base64Mac, base64Url, jwt, passwordHash, passwordVerify};
+module.exports = {base64Mac, base64Url, jwt, hashPassword, verifyPassword};
