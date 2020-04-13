@@ -1,6 +1,6 @@
 exports.styles = {
   body: {
-    font: '15px -apple-system, BlinkMacSystemFont, sans-serif',
+    font: '16px -apple-system, BlinkMacSystemFont, sans-serif',
     margin: '0 auto 200px',
     padding: '0 10px',
     maxWidth: '900px',
@@ -22,6 +22,12 @@ exports.styles = {
   },
   'h3': {
     fontSize: '20px'
+  },
+  'h4': {
+    fontSize: '18px'
+  },
+  p: {
+    lineHeight: 1.5
   },
   '.button': {
     display: 'inline-block',
@@ -65,7 +71,7 @@ exports.styles = {
       }
     },
     'input:-webkit-autofill::first-line': {
-      fontSize: 'initial'
+      fontSize: '16px'
     },
     'input[type=file]': {
       padding: 0,
@@ -79,7 +85,7 @@ exports.styles = {
       marginBottom: '20px',
       '.label': {
         display: 'block',
-        fontWeight: 'bold',
+        fontWeight: 500,
         marginBottom: '5px'
       }
     }
@@ -91,9 +97,13 @@ exports.styles = {
 exports.component = ({components}) => ({login, message, view, props}) => {
   return [
     ['h1', ['a', {href: '/'}, 'WebApp']],
-    login
-      ? ['div', 'Welcome, ' + login.name + ' ', ['a', {href: '/logout'}, 'Log Out']]
-      : ['div', ['a', {href: '/login'}, 'Log In'], ' or ', ['a', {href: '/register'}, 'Register']],
+    view != 'login' && view != 'register' && [
+      login && ['p', `Welcome, ${login.name}`],
+      ['div', login
+        ? ['a', {className: 'button', href: '/logout'}, 'Log Out']
+        : ['a', {className: 'button', href: '/login'}, 'Log In']
+      ]
+    ],
     message && ['div', {className: `message ${message.type}`}, message.text],
     [components[view], props]
   ];

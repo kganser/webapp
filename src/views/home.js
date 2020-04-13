@@ -3,8 +3,7 @@ exports.component = ({React}) => props => {
   const onClick = React.useCallback(() => setCount(count => count + 1), []);
 
   return [
-    ['h1', 'Home'],
-    ['p', `Welcome, ${props.ip}`],
+    ['h2', 'Home'],
     ['p', `You clicked ${count} times.`],
     ['button', {className: 'button', onClick}, 'Click me']
   ];
