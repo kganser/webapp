@@ -11,7 +11,7 @@
   "scripts": {
     "format": "eslint --fix 'src/**/*.js'",
     "lint": "eslint 'src/**/*.js'",
-    "start": "node src/index.js"
+    "start": "node src/server.js"
   },
   "engines": {
     "node": ">=10.0.0"
@@ -43,7 +43,7 @@
     ],
     "overrides": [
       {
-        "files": "src/components/*",
+        "files": "src/views/*",
         "rules": {
           "prettier/prettier": "off"
         }
