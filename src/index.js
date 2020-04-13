@@ -219,7 +219,7 @@ module.exports = ({
     const message = req.cookies[messageCookie];
     if (/^[es]:/.test(message)) {
       req.message = {
-        type: {e: 'danger', s: 'success'}[message[0]],
+        type: {e: 'error', s: 'success'}[message[0]],
         text: message.substr(2)
       };
     }

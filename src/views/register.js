@@ -1,7 +1,7 @@
 exports.component = () => props => {
   return [
     ['h2', 'Register'],
-    ['form', {method: 'post'},
+    ['form', {className: 'form', method: 'post'},
       ['label', {className: 'field'},
         ['div', {className: 'label'}, 'Name: '],
         ['input', {name: 'name'}]
@@ -14,7 +14,7 @@ exports.component = () => props => {
         ['div', {className: 'label'}, 'Password: '],
         ['input', {type: 'password', name: 'password'}]
       ],
-      ['button', 'Register']
+      ['button', {className: 'button'}, 'Register']
     ]
   ];
 };
