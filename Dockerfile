@@ -5,4 +5,4 @@ RUN npm ci --only=production
 COPY src src/
 EXPOSE 80
 ENV NODE_PATH=src NODE_ENV=production
-CMD ["node", "src/index.js"]
+CMD ["node", "src/server.js"]
