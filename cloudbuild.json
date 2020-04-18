@@ -22,7 +22,7 @@
         "run",
         "--filename=kubernetes.yml",
         "--image=gcr.io/simpl-js/webapp:$COMMIT_SHA",
-        "--location=us-central1-a",
+        "--location=us-central1-c",
         "--cluster=main"
       ]
     }
