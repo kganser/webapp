@@ -15,9 +15,10 @@ const {hashPassword, verifyPassword} = require('./util');
 
 const app = express();
 const port = process.env.PORT || 80;
+const dataDir = process.env.DATA_DIR || '.';
 const config = {};
 
-const db = level('db', {valueEncoding: 'json'});
+const db = level(`${dataDir}/db`, {valueEncoding: 'json'});
 
 app.use(
   webapp({
