@@ -9,6 +9,9 @@ const React = require('react');
 const ReactDOM = require('react-dom/server');
 const {base64Mac, base64Url, jwt} = require('./util');
 
+exports.reload = require('./reload');
+exports.util = require('./util');
+
 function jsx(node) {
   // node := [type, props, node*]
   //      |  [type, node*]
@@ -117,7 +120,7 @@ const resolveFile = (dir, file) =>
     });
   });
 
-module.exports = ({
+exports.router = ({
   assetsTTL = 86400,
   config = {},
   views = {},

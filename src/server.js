@@ -3,15 +3,14 @@
 // * typescript
 // * api/fe split setup
 
-const reload = require('./reload');
+const webapp = require('.');
 const dev = process.env.NODE_ENV != 'production';
 
-if (dev && reload()) return;
+if (dev && webapp.reload()) return;
 
 const level = require('level');
 const express = require('express');
-const webapp = require('.');
-const {hashPassword, verifyPassword} = require('./util');
+const {hashPassword, verifyPassword} = webapp.util;
 
 const app = express();
 const port = process.env.PORT || 80;
@@ -21,7 +20,7 @@ const config = {};
 const db = level(`${dataDir}/db`, {valueEncoding: 'json'});
 
 app.use(
-  webapp({
+  webapp.router({
     dev,
     config,
     views: {
