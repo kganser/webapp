@@ -265,7 +265,8 @@ exports.router = ({
   router.get('/static/:file', async (req, res) => {
     let {file} = req.params;
     if (!file.match(/^\.\.?(\/|$)/)) {
-      file = (await resolveFile(staticDir, file)) || (await resolveFile('static', file));
+      file =
+        (await resolveFile(staticDir, file)) || (await resolveFile(`${__dirname}/static`, file));
       if (file) return fs.createReadStream(file).pipe(res.status(200));
     }
     res.sendStatus(404);
