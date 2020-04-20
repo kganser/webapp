@@ -21,7 +21,7 @@
       "args": [
         "run",
         "--filename=kubernetes.yml",
-        "--image=gcr.io/simpl-js/webapp:$COMMIT_SHA",
+        "--image=gcr.io/$PROJECT_ID/webapp:$COMMIT_SHA",
         "--location=us-central1-c",
         "--cluster=main"
       ]
