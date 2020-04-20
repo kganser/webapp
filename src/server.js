@@ -13,7 +13,7 @@ const express = require('express');
 const {hashPassword, verifyPassword} = webapp.util;
 
 const app = express();
-const port = process.env.PORT || 80;
+const port = process.env.PORT || (dev ? 3000 : 80);
 const dataDir = process.env.DATA_DIR || '.';
 const config = {};
 
@@ -33,7 +33,7 @@ app.use(
 );
 
 app.get('/', (req, res) => {
-  res.renderPage('home', {meta: {title: 'Home'}, ip: req.ip});
+  res.renderPage('home', {meta: {title: 'Home'}});
 });
 
 app.get('/login', (req, res) => {
