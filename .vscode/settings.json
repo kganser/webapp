@@ -1,5 +1,6 @@
 {
   "editor.tabSize": 2,
+  "editor.rulers": [100],
   "editor.wordWrapColumn": 100,
   "eslint.format.enable": true,
   "javascript.validate.enable": false,

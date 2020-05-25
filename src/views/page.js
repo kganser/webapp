@@ -1,7 +1,7 @@
 exports.styles = {
   body: {
     font: '16px -apple-system, BlinkMacSystemFont, sans-serif',
-    margin: '0 auto 200px',
+    margin: '0 auto',
     padding: '0 10px',
     maxWidth: '900px',
     webkitTextSizeAdjust: 'none'
@@ -35,7 +35,6 @@ exports.styles = {
     background: '#eee',
     border: 'none',
     padding: '6px 12px',
-    marginRight: '10px',
     font: 'inherit',
     color: 'inherit',
     textDecoration: 'inherit',

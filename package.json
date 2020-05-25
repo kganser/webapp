@@ -11,7 +11,8 @@
   "scripts": {
     "format": "eslint --fix 'src/**/*.js'",
     "lint": "eslint 'src/**/*.js'",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "test": "jest"
   },
   "engines": {
     "node": ">=10.0.0"
@@ -25,13 +26,13 @@
     "express": "^4.17.1",
     "level": "^6.0.0",
     "react": "^16.12.0",
-    "react-dom": "^16.12.0"
+    "react-dom": "^16.12.0",
+    "sqlite3": "^4.1.1"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.9.0",
-    "eslint-plugin-prettier": "^3.1.2",
     "husky": "^3.1.0",
+    "jest": "^25.5.4",
     "prettier": "^1.19.1"
   },
   "eslintConfig": {
@@ -43,10 +44,7 @@
     ],
     "overrides": [
       {
-        "files": "src/views/*",
-        "rules": {
-          "prettier/prettier": "off"
-        }
+        "files": "src/views/*"
       }
     ],
     "parserOptions": {
@@ -54,12 +52,6 @@
         "globalReturn": true
       },
       "ecmaVersion": 9
-    },
-    "plugins": [
-      "prettier"
-    ],
-    "rules": {
-      "prettier/prettier": "error"
     }
   },
   "prettier": {
