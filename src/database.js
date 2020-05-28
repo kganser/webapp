@@ -1,4 +1,5 @@
 const sqlite = require('sqlite3');
+const fs = require('fs');
 
 const defaultStore = 'data';
 
@@ -96,7 +97,6 @@ const get = (db, store, {type, value}, parent, path, cursor) => new Promise((res
       cond.push(`AND key ${upperExclusive ? '<' : '<='} ?`);
     }
   }
-  //if (array) console.log({offset: limit[0], count: limit[1], lowerBound, upperBound});
 
   let index = 0;
   db.each(
@@ -190,7 +190,7 @@ const deleteObjectStore = async (db, name) => {
 const normalizeCursor = cursor => {
   if (cursor == 'shallow') return () => false;
   if (cursor == 'immediates') return path => !path.length;
-  if (cursor && typeof cursor == 'object') return path => (path.length ? undefined : cursor);
+  if (cursor && typeof cursor == 'object') return path => path.length ? undefined : cursor;
   if (typeof cursor != 'function') return () => {};
   return cursor;
 };
@@ -238,11 +238,13 @@ exports.open = (database, options) => {
     throw new Error(`Invalid version: ${version}`);
 
   let master;
+  let closed;
   const upgrade = transaction('upgrade');
   let write = upgrade;
 
   function transaction(type, stores) {
 
+    if (closed) throw new Error('Connection closed');
     if (type == 'upgrade' ? master : type != 'readonly' && type != 'readwrite')
       throw new Error(`Invalid transaction type ${type}`);
 
@@ -341,12 +343,7 @@ exports.open = (database, options) => {
       if (typeof key != 'number')
         throw new Error('Resource is not an array item');
       if (exists) {
-        // index   0 1 2 3 4 5 6 (count < row.key)
-        //         0 0 0 1 2 3 4 (count < row.key and >= key) -- delta should be <= key
-        // row.key 1 3 4 5 6 8 9
-        // delta   1 3 4 4 4 5 5
-        // 
-        // 2 => key == 4 => max_key(delta <= key) = 6
+        // TODO: optimize query for last item to shift
         const parentPath = encodePath(parent);
         const result = await dbGet(db,
           `SELECT CAST(key AS INTEGER) AS i FROM ${store} WHERE parent = ? AND
@@ -391,7 +388,7 @@ exports.open = (database, options) => {
       ));
 
       getVersion().then(async record => {
-        if (record && record.value >= version) return;
+        if (record && +record.value >= version) return;
 
         const putVersion = track(version =>
           putOne(db, defaultStore, [], 'object', version)
@@ -402,7 +399,7 @@ exports.open = (database, options) => {
 
         if (record) await putVersion(version);
         else await promise.createObjectStore(defaultStore);
-        if (onUpgradeNeeded) onUpgradeNeeded(promise, record ? record.version : 0);
+        if (onUpgradeNeeded) onUpgradeNeeded(promise, record ? +record.value : 0);
       });
     }
 
@@ -442,6 +439,24 @@ exports.open = (database, options) => {
       const txn = transaction('readwrite', store);
       txn.delete(path);
       return txn;
+    },
+    close: async () => {
+      if (closed) return;
+      closed = true;
+      await upgrade;
+      return new Promise((resolve, reject) => {
+        master.close(error => {
+          if (error) reject(error);
+          else resolve();
+        });
+      });
     }
   };
 };
+
+exports.delete = database => new Promise((resolve, reject) => {
+  fs.unlink(database, error => {
+    if (error) reject(error);
+    else resolve();
+  });
+});

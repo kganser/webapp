@@ -8,17 +8,32 @@ const data = {
 
 let db;
 
+const clean = () => database.delete('__testdb').catch(() => null);
+
+beforeAll(clean);
+afterAll(clean);
+
 test('upgrade', async () => {
   let oldVersion;
-  db = database.open(':memory:', {
+  db = database.open('__testdb', {
+    onUpgradeNeeded: (txn, version) => {
+      oldVersion = version;
+    }
+  });
+  const first = await db.get([]);
+  expect(oldVersion).toBe(0);
+  expect(first).toStrictEqual({});
+  await db.close();
+  db = database.open('__testdb', {
+    version: 2,
     onUpgradeNeeded: (txn, version) => {
       oldVersion = version;
       txn.put([], data);
     }
   });
-  const result = await db.get([]);
-  expect(oldVersion).toBe(0);
-  expect(result).toStrictEqual(data);
+  const second = await db.get([]);
+  expect(oldVersion).toBe(1);
+  expect(second).toStrictEqual(data);
 });
 
 test('get', async () => {
@@ -29,7 +44,11 @@ test('get', async () => {
 
 test('count', async () => {
   const txn = db.transaction('readonly');
-  const counts = await Promise.all([txn.count(['array']), txn.count(['object']), txn.count(['string'])]);
+  const counts = await Promise.all([
+    txn.count(['array']),
+    txn.count(['object']),
+    txn.count(['string'])
+  ]);
   expect(counts).toStrictEqual([3, 1, 0]);
 });
 
@@ -120,7 +139,7 @@ test('cursor function', async () => {
     [3, {object: {}}],
     [null, ['elem', undefined, 3]]
   ]);
-  expect(result).toEqual({array: {data: ['elem', undefined, 3]}}); // strict equal w/undefined?
+  expect(result).toEqual({array: {data: ['elem', undefined, 3]}}); // array gaps
 });
 
 test('cursor object', async () => {
@@ -134,6 +153,18 @@ test('cursor object', async () => {
   });
   expect(log).toStrictEqual([0, 1]);
   expect(result).toStrictEqual([1, 2]);
+});
+
+test('cursor enum', async () => {
+  const shallow = await db.get(['array'], 'shallow');
+  expect(shallow).toStrictEqual([]);
+  const immediates = await db.get([], 'immediates');
+  expect(immediates).toStrictEqual({array: [], string: 'value'});
+});
+
+test('cursor desc', async () => {
+  const result = await db.get(['array'], {descending: true});
+  expect(result).toStrictEqual([4, {object: {}}, 2, 1, "elem"]);
 });
 
 test('encoding', async () => {
