@@ -256,10 +256,9 @@ exports.open = (database, options) => {
       async () => {
         if (type == 'upgrade') {
           db = master = await connect(database);
-        // TODO: new read connection doesn't see updates after write?
-        // } else if (readonly) {
-        //   await upgrade;
-        //   db = await connect(database);
+        } else if (readonly) {
+          await upgrade;
+          db = await connect(database);
         } else {
           const previous = write;
           write = promise;
