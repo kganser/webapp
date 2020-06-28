@@ -7,15 +7,16 @@ const data = {
 };
 
 let db;
+const dbName = '__testdb';
 
-const clean = () => database.delete('__testdb').catch(() => null);
+const clean = () => database.delete(dbName).catch(() => null);
 
 beforeAll(clean);
 afterAll(clean);
 
 test('upgrade', async () => {
   let oldVersion;
-  db = database.open('__testdb', {
+  db = database.open(dbName, {
     onUpgradeNeeded: (txn, version) => {
       oldVersion = version;
     }
@@ -24,7 +25,7 @@ test('upgrade', async () => {
   expect(oldVersion).toBe(0);
   expect(first).toStrictEqual({});
   await db.close();
-  db = database.open('__testdb', {
+  db = database.open(dbName, {
     version: 2,
     onUpgradeNeeded: (txn, version) => {
       oldVersion = version;
@@ -36,81 +37,93 @@ test('upgrade', async () => {
   expect(second).toStrictEqual(data);
 });
 
-test('get', async () => {
-  const txn = db.transaction('readonly');
-  const [root, array] = await Promise.all([txn.get([]), txn.get(['array'])]);
-  expect([root, array]).toStrictEqual([data, data.array]);
+test('get', () => {
+  return db.transaction('readonly', async txn => {
+    const [root, array] = await Promise.all([txn.get([]), txn.get(['array'])]);
+    expect([root, array]).toStrictEqual([data, data.array]);
+  });
 });
 
-test('count', async () => {
-  const txn = db.transaction('readonly');
-  const counts = await Promise.all([
-    txn.count(['array']),
-    txn.count(['object']),
-    txn.count(['string'])
-  ]);
-  expect(counts).toStrictEqual([3, 1, 0]);
+test('count', () => {
+  return db.transaction('readonly', async txn => {
+    const counts = await Promise.all([
+      txn.count(['array']),
+      txn.count(['object']),
+      txn.count(['string'])
+    ]);
+    expect(counts).toStrictEqual([3, 1, 0]);
+  });
 });
 
-test('put', async () => {
-  const txn = db.transaction('readwrite');
-  await txn.put(['object', 'boolean'], false);
-  const result = await txn.get(['object', 'boolean']);
-  expect(result).toBe(false);
+test('put', () => {
+  return db.transaction('readwrite', async txn => {
+    await txn.put(['object', 'boolean'], false);
+    const result = await txn.get(['object', 'boolean']);
+    expect(result).toBe(false);
+  });
 });
 
-test('insert', async () => {
-  const txn = db.transaction('readwrite');
-  await txn.insert(['array', 2], 2);
-  const result = await txn.get(['array']);
-  expect(result).toStrictEqual(['elem', 1, 2, {a: null, b: [1,2,3]}]);
+test('insert', () => {
+  return db.transaction('readwrite', async txn => {
+    await txn.insert(['array', 2], 2);
+    const result = await txn.get(['array']);
+    expect(result).toStrictEqual(['elem', 1, 2, {a: null, b: [1,2,3]}]);
+  });
 });
 
-test('append', async () => {
-  const txn = db.transaction('readwrite');
-  await txn.append(['array'], {object: {}});
-  const result = await txn.get(['array']);
-  expect(result).toStrictEqual(['elem', 1, 2, {a: null, b: [1,2,3]}, {object: {}}]);
+test('append', () => {
+  return db.transaction('readwrite', async txn => {
+    await txn.append(['array'], {object: {}});
+    const result = await txn.get(['array']);
+    expect(result).toStrictEqual(['elem', 1, 2, {a: null, b: [1,2,3]}, {object: {}}]);
+  });
 });
 
 test('delete', async () => {
-  const txn = db.transaction('readwrite');
-  await txn.delete(['object']);
-  const result = await Promise.all([
-    txn.get([]),
-    txn.get(['object']),
-    txn.get(['object', 'boolean'])
-  ]);
-  expect(result).toStrictEqual([
-    {array: ['elem', 1, 2, {a: null, b: [1,2,3]}, {object: {}}], string: 'value'},
-    undefined,
-    undefined
-  ]);
+  return db.transaction('readwrite', async txn => {
+    await txn.delete(['object']);
+    const result = await Promise.all([
+      txn.get([]),
+      txn.get(['object']),
+      txn.get(['object', 'boolean'])
+    ]);
+    expect(result).toStrictEqual([
+      {array: ['elem', 1, 2, {a: null, b: [1,2,3]}, {object: {}}], string: 'value'},
+      undefined,
+      undefined
+    ]);
+  });
 });
 
-test('delete array element', async () => {
-  const txn = db.transaction('readwrite');
-  await txn.delete(['array', 3]);
-  const result = await txn.get(['array']);
-  expect(result).toStrictEqual(['elem', 1, 2, {object: {}}]);
+test('delete array element', () => {
+  return db.transaction('readwrite', async txn => {
+    await txn.delete(['array', 3]);
+    const result = await txn.get(['array']);
+    expect(result).toStrictEqual(['elem', 1, 2, {object: {}}]);
+  });
 });
 
-test('array index resolution 1', async () => {
-  const txn = db.transaction('readonly');
-  const result = await Promise.all([txn.get(['array', 3]), txn.get(['array', 4])]);
-  expect(result).toStrictEqual([{object: {}}, undefined]);
+test('array index resolution 1', () => {
+  return db.transaction('readonly', async txn => {
+    const result = await Promise.all([
+      txn.get(['array', 3]),
+      txn.get(['array', 4])
+    ]);
+    expect(result).toStrictEqual([{object: {}}, undefined]);
+  });
 });
 
-test('array index resolution 2', async () => {
-  const txn = db.transaction('readwrite');
-  await txn.put(['array', 4], 4);
-  const result = await txn.get(['array']);
-  expect(result).toStrictEqual(['elem', 1, 2, {object: {}}, 4]);
+test('array index resolution 2', () => {
+  return db.transaction('readwrite', async txn => {
+    await txn.put(['array', 4], 4);
+    const result = await txn.get(['array']);
+    expect(result).toStrictEqual(['elem', 1, 2, {object: {}}, 4]);
+  });
 });
 
 test('cursor function', async () => {
   const log = [];
-  result = await db.get([], (path, array) => {
+  const result = await db.get([], (path, array) => {
     log.push([path, array]);
     return array ? {
       upperBound: 3,
@@ -167,9 +180,47 @@ test('cursor desc', async () => {
   expect(result).toStrictEqual([4, {object: {}}, 2, 1, "elem"]);
 });
 
-test('encoding', async () => {
-  var txn = db.transaction('readwrite');
-  await txn.put(['e$caped "stríng"'], "'válue'");
-  const result = await txn.get(['e$caped "stríng"']);
-  expect(result).toStrictEqual("'válue'");
+test('encoding', () => {
+  return db.transaction('readwrite', async txn => {
+    await txn.put(['e$caped "stríng"'], "'válue'");
+    const result = await txn.get(['e$caped "stríng"']);
+    expect(result).toStrictEqual("'válue'");
+  });
+});
+
+test('exception', async () => {
+  expect.assertions(2);
+  let data;
+  const error = new Error('a');
+  try {
+    await db.transaction('readwrite', async txn => {
+      data = await txn.get([]);
+      await txn.put(['error'], true);
+      throw error;
+    });
+  } catch (e) {
+    expect(e).toBe(error);
+  }
+  const result = await db.get([]);
+  expect(result).toStrictEqual(data);
+});
+
+test('multiple exceptions', async () => {
+  expect.assertions(2);
+  let data;
+  const error = new Error('b');
+  try {
+    await db.transaction('readwrite', async txn => {
+      data = await txn.get([]);
+      await txn.put(['error'], true);
+      await Promise.all([
+        Promise.reject(error),
+        Promise.reject(new Error('c'))
+      ]);
+    });
+  } catch (e) {
+    expect(e).toBe(error);
+  }
+  const result = await db.get([]);
+  expect(result).toStrictEqual(data);
 });

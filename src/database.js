@@ -200,32 +200,38 @@ const connect = database => new Promise((resolve, reject) => {
     else resolve(db);
   });
 });
-const makeTransaction = (begin, end) => {
-  let setup, callback, pending = 1;
+const makeTransaction = (begin, commit, rollback) => {
+  let setup, error, success, failure, pending = 1;
 
   setImmediate(() => {
-    if (!--pending) callback();
+    if (!--pending) success(); // ended without operations
   });
 
   return {
-    promise: new Promise(resolve => callback = resolve),
+    promise: new Promise((resolve, reject) => {
+      success = resolve;
+      failure = reject;
+    }),
     track: command => async (...args) => {
       if (!pending) throw new Error('Transaction has closed');
       pending++;
       if (!setup) setup = begin();
       await setup;
-      let result, error;
+      if (!pending) return;
+      let result;
       try {
         result = await command(...args);
       } catch (e) {
         error = e;
+        pending = 0;
+        rollback();
+        failure(error);
       }
       setImmediate(async () => {
-        if (--pending) return;
-        await end();
-        callback();
+        if (error || --pending) return;
+        await commit();
+        success();
       });
-      if (error) throw error;
       return result;
     }
   };
@@ -237,12 +243,10 @@ exports.open = (database, options) => {
   if (typeof version != 'number' || version < 1 || version % 1)
     throw new Error(`Invalid version: ${version}`);
 
-  let master;
-  let closed;
+  let master, write, closed;
   const upgrade = transaction('upgrade');
-  let write = upgrade;
 
-  function transaction(type, stores) {
+  async function transaction(type, callback, stores) {
 
     if (closed) throw new Error('Connection closed');
     if (type == 'upgrade' ? master : type != 'readonly' && type != 'readwrite')
@@ -254,20 +258,26 @@ exports.open = (database, options) => {
 
     const {track, promise} = makeTransaction(
       async () => {
-        if (type == 'upgrade') {
-          db = master = await connect(database);
-        } else if (readonly) {
+        if (readonly) {
           await upgrade;
+          // separate read connections; TODO fixed pool?
           db = await connect(database);
         } else {
-          const previous = write;
-          write = promise;
-          await previous;
-          db = master;
+          // serialized write transactions using "master" connection
+          if (!master) master = connect(database);
+          db = await master;
+          if (write) {
+            const previous = write;
+            write = promise;
+            await previous.catch(e => null);
+          } else {
+            write = promise;
+          }
         }
         return dbRun(db, 'BEGIN IMMEDIATE');
       },
-      () => dbRun(db, 'COMMIT') // TODO: rollback on exception?
+      () => dbRun(db, 'COMMIT'),
+      () => dbRun(db, 'ROLLBACK')
     );
 
     const op = (writable, method) => track(async (store, path, value) => {
@@ -312,71 +322,68 @@ exports.open = (database, options) => {
       return method(store, path, value, exists);
     });
 
-    promise.get = op(false, async (store, path, cursor, exists) => {
-      const result = await getOne(db, store, path);
-      if (result) return get(db, store, result, path, [], normalizeCursor(cursor));
-    });
-
-    promise.count = op(false, async (store, path) => {
-      const result = await dbGet(db,
-        `SELECT count(*) AS count FROM ${store} WHERE parent = ?`,
-        encodePath(path));
-      return result.count;
-    });
-
-    promise.put = op(true, async (store, path, value, exists) => {
-      const parent = await getOne(db, store, path.slice(0, -1));
-      if (!parent && path.length)
-        throw new Error('Parent resource does not exist');
-      if (parent && parent.type != 'object' && parent.type != 'array')
-        throw Error('Parent resource is not an object or array');
-      if (parent && parent.type == 'array' && typeof path[path.length - 1] != 'number')
-        throw new Error('Invalid index to array resource');
-      if (exists) await deleteChildren(db, store, path);
-      return put(db, store, path, value);
-    });
-
-    promise.insert = op(true, async (store, path, value, exists) => {
-      const parent = path.slice(0, -1);
-      const key = path[path.length - 1];
-      if (typeof key != 'number')
-        throw new Error('Resource is not an array item');
-      if (exists) {
-        // TODO: optimize query for last item to shift
-        const parentPath = encodePath(parent);
+    const txn = {
+      get: op(false, async (store, path, cursor, exists) => {
+        const result = await getOne(db, store, path);
+        if (result) return get(db, store, result, path, [], normalizeCursor(cursor));
+      }),
+      count: op(false, async (store, path) => {
         const result = await dbGet(db,
-          `SELECT CAST(key AS INTEGER) AS i FROM ${store} WHERE parent = ? AND
-          (SELECT COUNT(*) FROM ${store} WHERE parent = ? AND CAST(key AS INTEGER) BETWEEN ? AND i) <= ?
-          ORDER BY i DESC LIMIT 1`,
-          [parentPath, parentPath, key, key]);
-        for (let index = result ? result.i : key; index >= key; index--) {
-          const fromPath = parent.concat(index);
-          const toPath = parent.concat(index + 1);
-          const {type, value} = await getOne(db, store, fromPath);
-          await Promise.all([
-            deleteOne(db, store, fromPath),
-            putOne(db, store, toPath, type, value),
-            shiftChildren(db, store, fromPath, toPath, type)
-          ]);
+          `SELECT count(*) AS count FROM ${store} WHERE parent = ?`,
+          encodePath(path));
+        return result.count;
+      }),
+      put: op(true, async (store, path, value, exists) => {
+        const parent = await getOne(db, store, path.slice(0, -1));
+        if (!parent && path.length)
+          throw new Error('Parent resource does not exist');
+        if (parent && parent.type != 'object' && parent.type != 'array')
+          throw Error('Parent resource is not an object or array');
+        if (parent && parent.type == 'array' && typeof path[path.length - 1] != 'number')
+          throw new Error('Invalid index to array resource');
+        if (exists) await deleteChildren(db, store, path);
+        return put(db, store, path, value);
+      }),
+      insert: op(true, async (store, path, value, exists) => {
+        const parent = path.slice(0, -1);
+        const key = path[path.length - 1];
+        if (typeof key != 'number')
+          throw new Error('Resource is not an array item');
+        if (exists) {
+          // TODO: optimize query for last item to shift
+          const parentPath = encodePath(parent);
+          const result = await dbGet(db,
+            `SELECT CAST(key AS INTEGER) AS i FROM ${store} WHERE parent = ? AND
+            (SELECT COUNT(*) FROM ${store} WHERE parent = ? AND CAST(key AS INTEGER) BETWEEN ? AND i) <= ?
+            ORDER BY i DESC LIMIT 1`,
+            [parentPath, parentPath, key, key]);
+          for (let index = result ? result.i : key; index >= key; index--) {
+            const fromPath = parent.concat(index);
+            const toPath = parent.concat(index + 1);
+            const {type, value} = await getOne(db, store, fromPath);
+            await Promise.all([
+              deleteOne(db, store, fromPath),
+              putOne(db, store, toPath, type, value),
+              shiftChildren(db, store, fromPath, toPath, type)
+            ]);
+          }
         }
-      }
-      return put(db, store, path, value);
-    });
-
-    promise.append = op(true, async (store, path, value) => {
-      const parent = await getOne(db, store, path);
-      if (!parent) throw new Error('Resource does not exist');
-      if (parent.type != 'array') throw new Error('Resource is not an array');
-      const index = await getNextIndex(db, store, path);
-      return put(db, store, path.concat(index), value);
-    });
-
-    promise.delete = op(true, async (store, path) => {
-      await Promise.all([
-        deleteChildren(db, store, path),
-        deleteOne(db, store, path)
-      ]);
-    });
+        return put(db, store, path, value);
+      }),
+      append: op(true, async (store, path, value) => {
+        const parent = await getOne(db, store, path);
+        if (!parent) throw new Error('Resource does not exist');
+        if (parent.type != 'array') throw new Error('Resource is not an array');
+        const index = await getNextIndex(db, store, path);
+        return put(db, store, path.concat(index), value);
+      }),
+      delete: op(true, async (store, path) => {
+        await Promise.all([
+          deleteChildren(db, store, path),
+          deleteOne(db, store, path)
+        ]);
+      })
+    };
 
     if (type == 'upgrade') {
       const getVersion = track(() =>
@@ -393,13 +400,15 @@ exports.open = (database, options) => {
           putOne(db, defaultStore, [], 'object', version)
         );
 
-        promise.createObjectStore = track(name => createObjectStore(db, name));
-        promise.deleteObjectStore = track(name => deleteObjectStore(db, name));
+        txn.createObjectStore = track(name => createObjectStore(db, name));
+        txn.deleteObjectStore = track(name => deleteObjectStore(db, name));
 
         if (record) await putVersion(version);
-        else await promise.createObjectStore(defaultStore);
-        if (onUpgradeNeeded) onUpgradeNeeded(promise, record ? +record.value : 0);
+        else await txn.createObjectStore(defaultStore);
+        if (onUpgradeNeeded) onUpgradeNeeded(txn, record ? +record.value : 0);
       });
+    } else {
+      await track(callback)(txn);
     }
 
     return promise;
@@ -408,43 +417,45 @@ exports.open = (database, options) => {
   return {
     transaction,
     get: async (path, cursor, store) => {
-      const txn = transaction('readonly', store);
-      const result = await txn.get(path, cursor);
-      await txn;
+      let result;
+      await transaction('readonly', async txn => {
+        result = await txn.get(path, cursor);
+      }, store);
       return result;
     },
     count: async (path, bounds, store) => {
-      const txn = transaction('readonly', store);
-      const result = txn.count(path, bounds);
-      await txn;
+      let result;
+      await transaction('readonly', async txn => {
+        result = await txn.count(path);
+      }, store);
       return result;
     },
     put: (path, value, store) => {
-      const txn = transaction('readwrite', store);
-      txn.put(path, value);
-      return txn;
+      return transaction('readwrite', txn => {
+        txn.put(path, value);
+      }, store);
     },
     insert: (path, value, store) => {
-      const txn = transaction('readwrite', store);
-      txn.insert(path, value);
-      return txn;
+      return transaction('readwrite', txn => {
+        txn.insert(path, value);
+      }, store);
     },
     append: (path, value, store) => {
-      const txn = transaction('readwrite', store);
-      txn.append(path, value);
-      return txn;
+      return transaction('readwrite', txn => {
+        txn.append(path, value);
+      }, store);
     },
     delete: (path, store) => {
-      const txn = transaction('readwrite', store);
-      txn.delete(path);
-      return txn;
+      return transaction('readwrite', txn => {
+        txn.delete(path);
+      }, store);
     },
     close: async () => {
       if (closed) return;
       closed = true;
-      await upgrade;
+      const db = await master;
       return new Promise((resolve, reject) => {
-        master.close(error => {
+        db.close(error => {
           if (error) reject(error);
           else resolve();
         });
