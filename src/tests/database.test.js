@@ -189,9 +189,12 @@ test('cursor desc', async () => {
 
 test('encoding', () => {
   return db.transaction('readwrite', async txn => {
-    await txn.put(['e$caped "stríng"'], "'válue'");
-    const result = await txn.get(['e$caped "stríng"']);
-    expect(result).toStrictEqual("'válue'");
+    await txn.put(['%'], {'%key': "'válue'"});
+    expect(await txn.get(['%'])).toStrictEqual({'%key': "'válue'"});
+    await txn.put(['25'], ['test']); // '%' encodes to '%25'
+    await txn.delete('%');
+    expect(await txn.get(['25'])).toStrictEqual(['test']);
+    expect(await txn.get(['%'])).toStrictEqual(undefined);
   });
 });
 
@@ -231,3 +234,15 @@ test('multiple exceptions', async () => {
   const result = await db.get([]);
   expect(result).toStrictEqual(data);
 });
+
+test('transaction closed error', done => {
+  db.transaction('readonly', txn => {
+    setTimeout(async () => {
+      try {
+        await txn.get([]);
+      } catch (e) {
+        done();
+      }
+    });
+  });
+})

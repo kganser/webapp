@@ -22,7 +22,6 @@ const encodePath = path => path.map(encodeURIComponent).join('/');
 const makeKey = path => {
   if (!path.length) return [null, ''];
   return [encodePath(path.slice(0, -1)), path[path.length - 1]];
-  // TODO: require root to be object or array
 };
 const makeValue = (value, type) => {
   if (type == 'array') return [];
@@ -177,8 +176,7 @@ const deleteOne = (db, store, path) => {
   return dbRun(db, `DELETE FROM ${store} WHERE parent = ? AND key = ?`, [parent, key]);
 };
 const deleteChildren = async (db, store, path) => {
-  // TODO: escape path
-  return dbRun(db, `DELETE FROM ${store} WHERE parent LIKE ?`, encodePath(path) + '%');
+  return dbRun(db, `DELETE FROM ${store} WHERE INSTR(parent, ?) = 1`, encodePath(path));
 };
 const createObjectStore = async (db, name) => {
   await dbRun(db, `CREATE TABLE ${name} (parent TEXT, key TEXT, type TEXT, value TEXT, PRIMARY KEY (parent, key))`);
@@ -253,6 +251,11 @@ exports.open = (database, options) => {
       throw new Error(`Invalid transaction type ${type}`);
 
     stores = [].concat(stores == null ? defaultStore : stores);
+    stores.forEach(store => {
+      if (/[^a-zA-Z0-9]/.test(store))
+        throw new Error(`Invalid store name: ${store}`);
+    });
+
     const readonly = type == 'readonly';
     let db;
 
@@ -283,7 +286,6 @@ exports.open = (database, options) => {
     const op = (writable, method) => track(async (store, path, value) => {
       if (writable && readonly) throw new Error('Transaction is read-only');
 
-      // TODO: escape store name
       if (stores.length == 1) {
         value = path;
         path = store;
