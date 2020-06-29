@@ -121,6 +121,13 @@ test('array index resolution 2', () => {
   });
 });
 
+test('non-array paths', async () => {
+  const a = await db.get();
+  expect(a).toStrictEqual({array: ['elem', 1, 2, {object: {}}, 4], string: 'value'});
+  const b = await db.get('string');
+  expect(b).toStrictEqual('value');
+});
+
 test('cursor function', async () => {
   const log = [];
   const result = await db.get([], (path, array) => {

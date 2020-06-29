@@ -69,11 +69,12 @@ app.post('/register', async (req, res) => {
   try {
     if (!email) throw new Error('Invalid email');
     if (!password) throw new Error('Invalid password');
-    const txn = db.transaction('readwrite');
-    if (await txn.get(['users', email], 'shallow'))
-      throw new Error('An account with this email address already exists');
-    const hash = await hashPassword(password);
-    await db.put(['users', email], {name, email, password: hash});
+    await db.transaction('readwrite', async txn => {
+      if (await txn.get(['users', email], 'shallow'))
+        throw new Error('An account with this email address already exists');
+      const hash = await hashPassword(password);
+      await db.put(['users', email], {name, email, password: hash});
+    });
     res.logIn({name, email}).redirect('/');
   } catch (e) {
     res.error(e.message).redirect(req.path);
