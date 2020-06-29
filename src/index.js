@@ -11,6 +11,7 @@ const {base64Mac, base64Url, jwt} = require('./util');
 
 exports.reload = require('./reload');
 exports.util = require('./util');
+exports.database = require('./database');
 
 function jsx(node) {
   // node := [type, props, node*]
