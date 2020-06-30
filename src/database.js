@@ -123,19 +123,21 @@ const get = (db, store, {type, value}, parent, path, cursor) => new Promise((res
 });
 const putOne = (db, store, path, type, value) => {
   const [parent, key] = makeKey(path);
+  // if (!path.length) console.log('putOne', {parent, key, type, value});
   return dbRun(db,
     `INSERT OR REPLACE INTO ${store} (parent, key, type, value) VALUES (?, ?, ?, ?)`,
     [parent, key, type, value]);
 };
-const put = async (db, store, path, value) => {
+const put = async (db, store, path, value, version) => {
   // { key: (key or index relative to parent)
   //   parent: (path of parent entry)
   //   type: (string|number|boolean|null|array|object)
   //   value: (or null if array or object) }
   const type = Array.isArray(value) ? 'array'
     : typeof value == 'object' ? value ? 'object' : 'null' : typeof value;
+  const data = path.length || store != defaultStore ? null : version;
   await Promise.all([
-    putOne(db, store, path, type, type == 'array' || type == 'object' ? null : value)
+    putOne(db, store, path, type, type == 'array' || type == 'object' ? data : value)
   ].concat(
     type == 'object' ? Object.entries(value).map(
       ([key, value]) => put(db, store, path.concat(key), value)
@@ -178,9 +180,9 @@ const deleteOne = (db, store, path) => {
 const deleteChildren = async (db, store, path) => {
   return dbRun(db, `DELETE FROM ${store} WHERE INSTR(parent, ?) = 1`, encodePath(path));
 };
-const createObjectStore = async (db, name) => {
+const createObjectStore = async (db, name, version) => {
   await dbRun(db, `CREATE TABLE ${name} (parent TEXT, key TEXT, type TEXT, value TEXT, PRIMARY KEY (parent, key))`);
-  if (name == defaultStore) await putOne(db, name, [], 'object', 1);
+  if (name == defaultStore) await putOne(db, name, [], 'object', version);
 };
 const deleteObjectStore = async (db, name) => {
   await dbRun(db, `DELETE TABLE ${name}`);
@@ -336,15 +338,17 @@ exports.open = (database, options) => {
         return result.count;
       }),
       put: op(true, async (store, path, value, exists) => {
-        const parent = await getOne(db, store, path.slice(0, -1));
+        const parent = path.length && await getOne(db, store, path.slice(0, -1));
         if (!parent && path.length)
           throw new Error('Parent resource does not exist');
+        if (!parent && (!value || typeof value != 'object'))
+          throw new Error('Top level must be an object or array');
         if (parent && parent.type != 'object' && parent.type != 'array')
           throw Error('Parent resource is not an object or array');
         if (parent && parent.type == 'array' && typeof path[path.length - 1] != 'number')
           throw new Error('Invalid index to array resource');
         if (exists) await deleteChildren(db, store, path);
-        return put(db, store, path, value);
+        return put(db, store, path, value, version);
       }),
       insert: op(true, async (store, path, value, exists) => {
         const parent = path.slice(0, -1);
@@ -392,17 +396,18 @@ exports.open = (database, options) => {
         getOne(db, defaultStore, []).catch(e => {
           if (String(e.message) != `SQLITE_ERROR: no such table: ${defaultStore}`)
             throw e;
-        }
-      ));
+        })
+      );
 
       getVersion().then(async record => {
         if (record && +record.value >= version) return;
+        console.log('getVersion', record);
 
         const putVersion = track(version =>
           putOne(db, defaultStore, [], 'object', version)
         );
 
-        txn.createObjectStore = track(name => createObjectStore(db, name));
+        txn.createObjectStore = track(name => createObjectStore(db, name, version));
         txn.deleteObjectStore = track(name => deleteObjectStore(db, name));
 
         if (record) await putVersion(version);

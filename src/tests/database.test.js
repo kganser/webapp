@@ -15,26 +15,24 @@ beforeAll(clean);
 afterAll(clean);
 
 test('upgrade', async () => {
-  let oldVersion;
+  expect.assertions(5);
   db = database.open(dbName, {
-    onUpgradeNeeded: (txn, version) => {
-      oldVersion = version;
+    onUpgradeNeeded: async (txn, version) => {
+      expect(version).toBe(0);
+      expect(await txn.get([])).toStrictEqual({});
     }
   });
-  const first = await db.get([]);
-  expect(oldVersion).toBe(0);
-  expect(first).toStrictEqual({});
+  await db.put([], {data: 'test'});
   await db.close();
   db = database.open(dbName, {
     version: 2,
-    onUpgradeNeeded: (txn, version) => {
-      oldVersion = version;
+    onUpgradeNeeded: async (txn, version) => {
+      expect(version).toBe(1);
+      expect(await txn.get([])).toStrictEqual({data: 'test'});
       txn.put([], data);
     }
   });
-  const second = await db.get([]);
-  expect(oldVersion).toBe(1);
-  expect(second).toStrictEqual(data);
+  expect(await db.get([])).toStrictEqual(data);
 });
 
 test('get', () => {
