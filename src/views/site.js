@@ -3,8 +3,8 @@ const serialize = data => JSON.stringify(data).replace(
   char => ({'<': '\\u003C', '\u2028': '\\u2028', '\u2029': '\\u2029'}[char])
 );
 
-exports.component = ({components}) => ({title, description, styles, scripts, view, props}) => {
-  return ['html',
+exports.component = ({components, jsx}) => ({title, description, styles, scripts, view, props}) => {
+  return jsx(['html',
     ['head',
       ['title', title],
       ['meta', {charSet: 'utf-8'}],
@@ -23,5 +23,5 @@ exports.component = ({components}) => ({title, description, styles, scripts, vie
         }
       }]
     ]
-  ];
+  ]);
 };

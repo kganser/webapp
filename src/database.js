@@ -226,6 +226,7 @@ const makeTransaction = (begin, commit, rollback) => {
         pending = 0;
         rollback();
         failure(error);
+        // TODO: re-throw?
       }
       setImmediate(async () => {
         if (error || --pending) return;
@@ -401,7 +402,6 @@ exports.open = (database, options) => {
 
       getVersion().then(async record => {
         if (record && +record.value >= version) return;
-        console.log('getVersion', record);
 
         const putVersion = track(version =>
           putOne(db, defaultStore, [], 'object', version)

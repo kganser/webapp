@@ -19,14 +19,20 @@ const jwt = (key, data) => {
   const payload =
     'eyJhbGciOiJoczI1NiIsInR5cCI6Imp3dCJ9.' +
     base64Url(Buffer.from(JSON.stringify({...data, iat: Math.floor(Date.now() / 1000)})));
-  return payload + '.' + base64Mac(key, payload);
+  return `${payload}.${base64Mac(key, payload)}`;
+};
+
+const decodeJwt = (key, token) => {
+  const parts = (token || '').split('.');
+  if (parts.length == 3 && base64Mac(key, `${parts[0]}.${parts[1]}`) == parts[2])
+    return JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
 };
 
 const pbkdf2 = (password, salt, iterations) =>
   new Promise((resolve, reject) => {
     crypto.pbkdf2(password, salt, iterations, 32, 'sha256', (error, key) => {
       if (error) reject(error);
-      else resolve('pbkdf2_sha256_' + iterations + '.' + base64Url(salt) + '.' + base64Url(key));
+      else resolve(`pbkdf2_sha256_${iterations}.${base64Url(salt)}.${base64Url(key)}`);
     });
   });
 
@@ -38,4 +44,20 @@ const verifyPassword = async (password, hash) => {
   return result == hash;
 };
 
-module.exports = {base64Mac, base64Url, jwt, hashPassword, verifyPassword};
+const url = (path, args) => {
+  return path.replace(/:[a-z]+/ig, param => {
+    const key = param.substr(1);
+    const arg = args[key] || '';
+    delete args[key];
+    return encodeURIComponent(arg);
+  }) + ('?' + Object.keys(args).reduce((query, name) => {
+    const value = args[name];
+    name = encodeURIComponent(name);
+    return query.concat(
+      value === undefined ? []
+        : Array.isArray(value) ? value.map(v => name + '=' + encodeURIComponent(v || ''))
+        : [name + (value == null ? '' : '=' + encodeURIComponent(value))]);
+  }, []).join('&')).replace(/\?$/, '');
+}
+
+module.exports = {base64Mac, base64Url, decodeJwt, jwt, hashPassword, verifyPassword, url};

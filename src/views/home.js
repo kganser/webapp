@@ -1,10 +1,10 @@
-exports.component = ({React}) => props => {
+exports.component = ({React, jsx}) => props => {
   const [count, setCount] = React.useState(0);
   const onClick = React.useCallback(() => setCount(count => count + 1), []);
 
-  return [
+  return jsx([
     ['h2', 'Home'],
     ['p', `You clicked ${count} times.`],
     ['button', {className: 'button', onClick}, 'Click me']
-  ];
+  ]);
 };

@@ -93,8 +93,8 @@ exports.styles = {
     display: 'none !important'
   }
 };
-exports.component = ({components}) => ({login, message, view, props}) => {
-  return [
+exports.component = ({components, jsx}) => ({login, message, view, props}) => {
+  return jsx([
     ['h1', ['a', {href: '/'}, 'WebApp']],
     view != 'login' && view != 'register' && [
       login && ['p', `Welcome, ${login.name}`],
@@ -105,5 +105,5 @@ exports.component = ({components}) => ({login, message, view, props}) => {
     ],
     message && ['div', {className: `message ${message.type}`}, message.text],
     [components[view], props]
-  ];
+  ]);
 };

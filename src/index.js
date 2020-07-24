@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const babel = require('@babel/core');
 const React = require('react');
 const ReactDOM = require('react-dom/server');
-const {base64Mac, base64Url, jwt} = require('./util');
+const {base64Mac, base64Url, decodeJwt, jwt, url} = require('./util');
 
 exports.reload = require('./reload');
 exports.util = require('./util');
@@ -18,7 +18,6 @@ function jsx(node) {
   //      |  [type, node*]
   //      |  [node*]
   //      |  string
-
   if (!Array.isArray(node)) return node;
   let type = node[0],
     props,
@@ -94,14 +93,17 @@ const shortHash = string =>
       .digest()
   ).substr(0, 8);
 
-const site = (React, components, config, jsx) => ({
+const site = (React, components, config, jsx, url) => ({
   React,
   config,
   components,
+  jsx,
+  url,
   init: function(root, component, props) {
     Object.entries(components).forEach(([name, component]) => {
       const render = component(this);
-      components[name] = props => jsx(render(props));
+      render.displayName = name;
+      components[name] = render;
     });
     if (root)
       ReactDOM.hydrate(
@@ -113,18 +115,18 @@ const site = (React, components, config, jsx) => ({
   }
 });
 
-const resolveFile = (dir, file) =>
-  new Promise(resolve => {
-    const filePath = path.join(dir, file);
-    fs.access(filePath, fs.constants.R_OK, error => {
-      resolve(!error && filePath);
-    });
+const resolveFile = (dir, file) => new Promise(resolve => {
+  const filePath = path.join(dir, file);
+  fs.access(filePath, fs.constants.R_OK, error => {
+    resolve(!error && filePath);
   });
+});
 
 exports.router = ({
   assetsTTL = 86400,
   config = {},
   views = {},
+  loginData,
   sessionKey,
   sessionCookie = 'auth',
   messageCookie = 'message',
@@ -134,7 +136,7 @@ exports.router = ({
   const script = (name, component) => {
     const code =
       name == 'site'
-        ? `window.Site = (${site})(React, {}, ${JSON.stringify(config)}, ${jsx});`
+        ? `window.Site = (${site})(React, {}, ${JSON.stringify(config)}, ${jsx}, ${url});`
         : `window.Site.components[${JSON.stringify(name)}] = ${component};`;
     return babel.transformSync(code, {
       comments: dev,
@@ -152,7 +154,8 @@ exports.router = ({
     React,
     Object.entries(views).reduce((views, [name, view]) => ({...views, [name]: view.component}), {}),
     config,
-    jsx
+    jsx,
+    url
   ).init();
 
   const router = express.Router();
@@ -164,7 +167,8 @@ exports.router = ({
       const ids = ['site'].concat(view);
       const assets = {};
       ids.forEach(function add(name) {
-        if (assets[name] || !views[name]) return;
+        if (assets[name]) return;
+        if (!views[name]) throw new Error(`View "${name}" not found`);
         const {component, styles, includes = {}, dependencies = []} = views[name];
         assets[name] = {
           styles: (styles ? [`/css/${name}.${shortHash(css(styles))}.css`] : []).concat(
@@ -201,10 +205,11 @@ exports.router = ({
           )
       );
     };
-    res.renderPage = (view, {meta, ...props}) => {
-      const {login, message} = req;
+    res.renderPage = (view, data) => {
+      const {login, token, message} = req;
+      const {meta, ...props} = data || {};
       if (message) res.clearCookie(messageCookie);
-      res.render(['page', view], {meta, view, login, message, props});
+      res.render(['page', view], {meta, view, login, token, message, props});
     };
     res.logIn = data => res.cookie(sessionCookie, jwt(sessionKey, data));
     res.logOut = () => res.clearCookie(sessionCookie);
@@ -212,13 +217,7 @@ exports.router = ({
     res.success = (message, path) => res.cookie(messageCookie, `s:${message}`);
 
     req.token = req.cookies[sessionCookie];
-    if (req.token) {
-      const parts = req.token.split('.');
-      if (parts.length == 3 && base64Mac(sessionKey, parts[0] + '.' + parts[1]) == parts[2]) {
-        // TODO: login exp (iat + ttl)
-        req.login = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
-      }
-    }
+    req.login = decodeJwt(sessionKey, req.token);
 
     const message = req.cookies[messageCookie];
     if (/^[es]:/.test(message)) {

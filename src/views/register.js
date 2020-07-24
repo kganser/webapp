@@ -1,5 +1,5 @@
-exports.component = () => props => {
-  return [
+exports.component = ({jsx}) => props => {
+  return jsx([
     ['h2', 'Register'],
     ['form', {className: 'form', method: 'post'},
       ['label', {className: 'field'},
@@ -16,5 +16,5 @@ exports.component = () => props => {
       ],
       ['button', {className: 'button'}, 'Register']
     ]
-  ];
+  ]);
 };
