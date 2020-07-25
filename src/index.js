@@ -13,6 +13,27 @@ exports.reload = require('./reload');
 exports.util = require('./util');
 exports.database = require('./database');
 
+// Patch express to propagate errors from async request handlers
+const Layer = require('express/lib/router/layer');
+const handle_request = Layer.prototype.handle_request;
+
+Layer.prototype.handle_request = function(req, res, next) {
+  if (!this._async && this.method) {
+    this._async = true;
+    const handle = this.handle;
+    this.handle = async function(req, res, next) {
+      try {
+        return await handle.apply(this, arguments);
+      } catch (e) {
+        next(e);
+      }
+    };
+  }
+  return handle_request.apply(this, arguments);
+};
+
+exports.app = express;
+
 function jsx(node) {
   // node := [type, props, node*]
   //      |  [type, node*]
