@@ -39,6 +39,7 @@ const pbkdf2 = (password, salt, iterations) =>
 const hashPassword = password => pbkdf2(password, crypto.randomBytes(32), 20000);
 
 const verifyPassword = async (password, hash) => {
+  if (!hash) return false;
   const [spec, salt] = hash.split('.'); // pbkdf2_sha256_20000.[salt].[digest]
   const result = await pbkdf2(password, Buffer.from(salt, 'base64'), +spec.split('_')[2]);
   return result == hash;
