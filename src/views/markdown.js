@@ -2,6 +2,7 @@ exports.styles = {
   '.image-embed': {
     maxWidth: '500px',
     img: {
+      display: 'block',
       maxWidth: '100%'
     }
   },
