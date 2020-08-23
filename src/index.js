@@ -187,6 +187,7 @@ exports.router = ({
     res.render = (view, {meta, ...props}) => {
       const ids = ['site'].concat(view);
       const assets = {};
+      const scripts = [];
       ids.forEach(function add(name) {
         if (assets[name]) return;
         if (!views[name]) throw new Error(`View "${name}" not found`);
@@ -195,11 +196,10 @@ exports.router = ({
           styles: (styles ? [`/css/${name}.${shortHash(css(styles))}.css`] : []).concat(
             includes.styles || []
           ),
-          scripts: [`/js/${name}.${shortHash(script(name, component))}.js`].concat(
-            includes.scripts || []
-          )
+          scripts: [`/js/${name}.${shortHash(script(name, component))}.js`]
         };
         dependencies.forEach(add);
+        (includes.scripts || []).forEach(script => scripts.push(script));
       });
       res.end(
         '<!doctype html>' +
@@ -214,12 +214,13 @@ exports.router = ({
                   new Set(Object.values(assets).reduce((urls, {styles}) => urls.concat(styles), []))
                 ),
                 scripts: Array.from(
-                  new Set(
-                    Object.values(assets).reduce((urls, {scripts}) => urls.concat(scripts), [
+                  new Set([
+                    ...scripts,
+                    ...Object.values(assets).reduce((urls, {scripts}) => urls.concat(scripts), [
                       `/static/react${dev ? '.dev' : ''}.js`,
                       `/static/react-dom${dev ? '.dev' : ''}.js`
                     ])
-                  )
+                  ])
                 )
               }
             ])
@@ -284,11 +285,11 @@ exports.router = ({
   });
 
   router.get('/static/:file', async (req, res) => {
-    let {file} = req.params;
-    if (!file.match(/^\.\.?(\/|$)/)) {
-      file =
-        (await resolveFile(staticDir, file)) || (await resolveFile(`${__dirname}/static`, file));
-      if (file) return fs.createReadStream(file).pipe(res.status(200));
+    const filename = req.params.file;
+    if (!/^\.\.?(\/|$)/.test(filename)) {
+      const file =
+        (await resolveFile(staticDir, filename)) || (await resolveFile(`${__dirname}/static`, filename));
+      if (file) return fs.createReadStream(file).pipe(res.type(path.extname(filename)).status(200));
     }
     res.sendStatus(404);
   });
