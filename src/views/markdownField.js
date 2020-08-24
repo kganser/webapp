@@ -3,12 +3,7 @@ exports.styles = {
     '.toolbar': {
       background: '#f6f6f6',
       padding: '8px 8px 0',
-      textAlign: 'right',
-      '&:after': {
-        content: '',
-        clear: 'both',
-        display: 'block'
-      }
+      textAlign: 'right'
     },
     '.tabs': {
       position: 'relative',
@@ -33,15 +28,10 @@ exports.styles = {
       border: 'solid 1px #ddd',
       boxSizing: 'border-box',
     },
-    '.preview': {
-      minHeight: '2em',
-      padding: '0 10px'
-    },
     textarea: {
       border: 'none',
       padding: '1em 10px',
-      resize: 'none',
-      width: '100%'
+      width: '100% !important'
     }
   }
 };
