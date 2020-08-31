@@ -53,18 +53,15 @@ module.exports = ({key, secret}) => {
     });
   }
 
-  const sendEmail = async ({to, subject, message}) => {
-    const response = await aws({
+  const sendEmail = async ({to, from, subject, message}) => {
+    const response = await request({
       service: 'email',
       query: {
         Action: 'SendEmail',
         'Destination.ToAddresses.member.1': to,
-        'Message.Body.Text.Data':
-          message +
-          '\n\nIf you have any questions, please e-mail us at info@austinmusicacademy.com' +
-          '\n\nBest wishes,\nGreater Austin Music Academy',
+        'Message.Body.Text.Data': message,
         'Message.Subject.Data': subject,
-        Source: 'noreply@members.austinmusicacademy.com',
+        Source: from,
         Version: '2010-12-01'
       }
     });
