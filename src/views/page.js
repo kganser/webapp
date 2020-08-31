@@ -6,10 +6,6 @@ exports.styles = {
     maxWidth: '900px',
     webkitTextSizeAdjust: 'none'
   },
-  'ul, ol': {
-    listStyle: 'none',
-    padding: 0
-  },
   'h1, h2, h3, h4': {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     fontWeight: 500
@@ -25,9 +21,6 @@ exports.styles = {
   },
   'h4': {
     fontSize: '18px'
-  },
-  p: {
-    lineHeight: 1.5
   },
   '.button': {
     display: 'inline-block',
@@ -54,43 +47,6 @@ exports.styles = {
     '&.error': {
       background: '#b00'
     },
-  },
-  '.form': {
-    'input, select, textarea': {
-      font: 'inherit',
-      border: 'solid 1px #ddd',
-      borderRadius: 0,
-      padding: '5px 10px',
-      outline: 'none',
-      width: '300px',
-      maxWidth: '100%',
-      boxSizing: 'border-box',
-      '&:focus': {
-        borderColor: '#bbb'
-      }
-    },
-    'input:-webkit-autofill::first-line': {
-      fontSize: '16px'
-    },
-    'input[type=file]': {
-      padding: 0,
-      border: 'none'
-    },
-    'textarea': {
-      width: '500px',
-    },
-    '.field': {
-      display: 'block',
-      marginBottom: '20px',
-      '.label': {
-        display: 'block',
-        fontWeight: 500,
-        marginBottom: '5px'
-      }
-    }
-  },
-  '.hidden': {
-    display: 'none !important'
   }
 };
 exports.component = ({components, jsx}) => ({login, message, view, props}) => {

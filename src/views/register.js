@@ -1,17 +1,16 @@
-exports.component = ({jsx}) => props => {
+exports.dependencies = ['field'];
+exports.component = ({jsx, components}) => props => {
+  const {field} = components;
   return jsx([
     ['h2', 'Register'],
-    ['form', {className: 'form', method: 'post'},
-      ['label', {className: 'field'},
-        ['div', {className: 'label'}, 'Name:'],
+    ['form', {method: 'post'},
+      [field, {label: 'Name'},
         ['input', {autoFocus: true, name: 'name'}]
       ],
-      ['label', {className: 'field'},
-        ['div', {className: 'label'}, 'Email:'],
+      [field, {label: 'Email'},
         ['input', {type: 'email', name: 'email'}]
       ],
-      ['label', {className: 'field'},
-        ['div', {className: 'label'}, 'Password:'],
+      [field, {label: 'Password'},
         ['input', {type: 'password', name: 'password'}]
       ],
       ['button', {className: 'button'}, 'Register']

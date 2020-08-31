@@ -1,12 +1,22 @@
 const crypto = require('crypto');
 
-const base64Mac = (key, payload) =>
-  base64Url(
-    crypto
-      .createHmac('sha256', key)
-      .update(payload)
-      .digest()
-  );
+const hash = (data, enc, algo) =>
+  crypto
+    .createHash(algo || 'sha256')
+    .update(data)
+    .digest(enc);
+
+const hmac = (key, data, enc, algo) =>
+  crypto
+    .createHmac(algo || 'sha256', key)
+    .update(data)
+    .digest(enc);
+
+const sign = (data, key, enc, algo) =>
+  crypto
+    .createSign(algo || 'RSA-SHA256')
+    .update(data)
+    .sign(key, enc);
 
 const base64Url = buffer =>
   buffer
@@ -14,6 +24,9 @@ const base64Url = buffer =>
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
+
+const base64Mac = (key, data, enc, algo) =>
+  base64Url(hmac(key, data, enc, algo));
 
 const jwt = (key, data) => {
   const payload =
@@ -61,4 +74,15 @@ const url = (path, args) => {
   }, []).join('&')).replace(/\?$/, '');
 }
 
-module.exports = {base64Mac, base64Url, decodeJwt, jwt, hashPassword, verifyPassword, url};
+module.exports = {
+  base64Mac,
+  base64Url,
+  decodeJwt,
+  hash,
+  hmac,
+  sign,
+  jwt,
+  hashPassword,
+  verifyPassword,
+  url
+};

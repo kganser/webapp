@@ -7,11 +7,7 @@ const crypto = require('crypto');
 const babel = require('@babel/core');
 const React = require('react');
 const ReactDOM = require('react-dom/server');
-const {base64Mac, base64Url, decodeJwt, jwt, url} = require('./util');
-
-exports.reload = require('./reload');
-exports.util = require('./util');
-exports.database = require('./database');
+const {base64Mac, base64Url, decodeJwt, hash, jwt, url} = require('./util');
 
 // Patch express to propagate errors from async request handlers
 const Layer = require('express/lib/router/layer');
@@ -107,12 +103,7 @@ function css(styles) {
 }
 
 const shortHash = string =>
-  base64Url(
-    crypto
-      .createHash('sha256')
-      .update(string)
-      .digest()
-  ).substr(0, 8);
+  base64Url(hash(string)).substr(0, 8);
 
 const site = (React, components, config, jsx, url) => ({
   React,

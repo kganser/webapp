@@ -3,19 +3,18 @@
 // * typescript
 // * api/fe split setup
 
-const webapp = require('.');
+const reload = require('./reload');
 const dev = process.env.NODE_ENV != 'production';
 
-if (dev && webapp.reload()) return;
+if (dev && reload()) return;
 
-const express = require('express');
+const webapp = require('.');
 const database = require('./database');
-const {hashPassword, verifyPassword} = webapp.util;
+const {hashPassword, verifyPassword} = require('./util');
 
-const app = express();
+const app = webapp.app();
 const port = process.env.PORT || (dev ? 3000 : 80);
 const dataDir = process.env.DATA_DIR || '.';
-const config = {};
 
 const db = database.open(`${dataDir}/db`, {
   onUpgradeNeeded: txn => {
@@ -26,8 +25,9 @@ const db = database.open(`${dataDir}/db`, {
 app.use(
   webapp.router({
     dev,
-    config,
+    config: {},
     views: {
+      field: require('./views/field'),
       home: require('./views/home'),
       login: require('./views/login'),
       register: require('./views/register')
