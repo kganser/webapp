@@ -28,6 +28,9 @@ exports.styles = {
       border: 'solid 1px #ddd',
       boxSizing: 'border-box',
     },
+    '.ProseMirror img': {
+      maxWidth: '100%'
+    },
     textarea: {
       border: 'none',
       padding: '1em 10px',
