@@ -175,6 +175,10 @@ exports.router = ({
   router.use(cookieParser());
 
   router.use((req, res, next) => {
+
+    if (req.headers['x-forwarded-proto'] == 'http')
+      return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
+
     res.render = (view, {meta, ...props}) => {
       const ids = ['site'].concat(view);
       const assets = {};
