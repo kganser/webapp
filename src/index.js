@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const babel = require('@babel/core');
 const React = require('react');
 const ReactDOM = require('react-dom/server');
-const {base64Mac, base64Url, decodeJwt, hash, jwt, url} = require('./util');
+const {css, jsx, base64Mac, base64Url, decodeJwt, hash, jwt, url} = require('./util');
 
 // Patch express to propagate errors from async request handlers
 const Layer = require('express/lib/router/layer');
@@ -29,78 +29,6 @@ Layer.prototype.handle_request = function(req, res, next) {
 };
 
 exports.app = express;
-
-function jsx(node) {
-  // node := [type, props, node*]
-  //      |  [type, node*]
-  //      |  [node*]
-  //      |  string
-  if (!Array.isArray(node)) return node;
-  let type = node[0],
-    props,
-    children;
-  if (!type || Array.isArray(type)) {
-    type = React.Fragment;
-    children = node;
-  } else if (typeof node[1] == 'object' && !Array.isArray(node[1])) {
-    props = node[1];
-    children = node.slice(2);
-  } else {
-    children = node.slice(1);
-  }
-  return React.createElement.apply(null, [type, props].concat(children.map(jsx)));
-}
-
-function css(styles) {
-  // styles     := { rule* }
-  // rule       := selector : properties
-  // properties := { (property|rule)* }
-  // property   := name : value
-
-  const rule = (selector, properties) => {
-    const rules = [];
-    let styles = [];
-    Object.entries(properties).forEach(([name, value]) => {
-      if (typeof value == 'object') {
-        if (styles.length) {
-          rules.push(selector + '{' + styles.join(';') + '}');
-          styles = [];
-        }
-        selector.split(',').forEach(s => {
-          s = s.trim();
-          name.split(',').forEach(n => {
-            n = n.trim();
-            rule(n.includes('&') ? n.replace('&', s) : s + ' ' + n, value).forEach(rule => {
-              rules.push(rule);
-            });
-          });
-        });
-      } else {
-        styles.push(
-          name
-            .replace(/([a-z])([A-Z])/g, '$1-$2')
-            .replace(/^(webkit|moz|o|ms)-/, '-$1-')
-            .toLowerCase() +
-            ':' +
-            (value === '' ? '""' : value)
-        );
-      }
-    });
-    if (styles.length) rules.push(selector + '{' + styles.join(';') + '}');
-    return rules;
-  };
-
-  return Object.keys(styles || {})
-    .reduce((rules, selector) => {
-      const properties = styles[selector];
-      return rules.concat(
-        selector.startsWith('@media ')
-          ? selector + '{' + css(properties) + '}'
-          : rule(selector, properties)
-      );
-    }, [])
-    .join('');
-}
 
 const shortHash = string =>
   base64Url(hash(string)).substr(0, 8);
@@ -134,6 +62,16 @@ const resolveFile = (dir, file) => new Promise(resolve => {
   });
 });
 
+exports.initComponents = function initComponents(views, config) {
+  return site(
+    React,
+    Object.entries(views).reduce((views, [name, view]) => ({...views, [name]: view.component}), {}),
+    config,
+    jsx,
+    url
+  ).init().components;
+};
+
 exports.router = ({
   assetsTTL = 86400,
   config = {},
@@ -162,13 +100,7 @@ exports.router = ({
   if (!views.site) views.site = require('./views/site');
   if (!views.page) views.page = require('./views/page');
 
-  const {components} = site(
-    React,
-    Object.entries(views).reduce((views, [name, view]) => ({...views, [name]: view.component}), {}),
-    config,
-    jsx,
-    url
-  ).init();
+  const components = initComponents(views, config);
 
   const router = express.Router();
   router.use(bodyParser.urlencoded({extended: false}));

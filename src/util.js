@@ -1,4 +1,77 @@
 const crypto = require('crypto');
+const React = require('react');
+
+function css(styles) {
+  // styles     := { rule* }
+  // rule       := selector : properties
+  // properties := { (property|rule)* }
+  // property   := name : value
+
+  const rule = (selector, properties) => {
+    const rules = [];
+    let styles = [];
+    Object.entries(properties).forEach(([name, value]) => {
+      if (typeof value == 'object') {
+        if (styles.length) {
+          rules.push(selector + '{' + styles.join(';') + '}');
+          styles = [];
+        }
+        selector.split(',').forEach(s => {
+          s = s.trim();
+          name.split(',').forEach(n => {
+            n = n.trim();
+            rule(n.includes('&') ? n.replace('&', s) : s + ' ' + n, value).forEach(rule => {
+              rules.push(rule);
+            });
+          });
+        });
+      } else {
+        styles.push(
+          name
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .replace(/^(webkit|moz|o|ms)-/, '-$1-')
+            .toLowerCase() +
+            ':' +
+            (value === '' ? '""' : value)
+        );
+      }
+    });
+    if (styles.length) rules.push(selector + '{' + styles.join(';') + '}');
+    return rules;
+  };
+
+  return Object.keys(styles || {})
+    .reduce((rules, selector) => {
+      const properties = styles[selector];
+      return rules.concat(
+        selector.startsWith('@media ')
+          ? selector + '{' + css(properties) + '}'
+          : rule(selector, properties)
+      );
+    }, [])
+    .join('');
+}
+
+function jsx(node) {
+  // node := [type, props, node*]
+  //      |  [type, node*]
+  //      |  [node*]
+  //      |  string
+  if (!Array.isArray(node)) return node;
+  let type = node[0],
+    props,
+    children;
+  if (!type || Array.isArray(type)) {
+    type = React.Fragment;
+    children = node;
+  } else if (typeof node[1] == 'object' && !Array.isArray(node[1])) {
+    props = node[1];
+    children = node.slice(2);
+  } else {
+    children = node.slice(1);
+  }
+  return React.createElement.apply(null, [type, props].concat(children.map(jsx)));
+}
 
 const hash = (data, enc, algo) =>
   crypto
@@ -75,6 +148,8 @@ const url = (path, args) => {
 }
 
 module.exports = {
+  css,
+  jsx,
   base64Mac,
   base64Url,
   decodeJwt,

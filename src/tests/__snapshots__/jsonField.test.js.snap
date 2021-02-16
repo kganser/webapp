@@ -1,0 +1,1378 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Editable controlled 1`] = `
+<span
+  className="json object"
+>
+  <span
+    className="toggle"
+    onClick={[Function]}
+  />
+  <button
+    className="add"
+    onClick={[Function]}
+    title="Add"
+  >
+    +
+  </button>
+  <ul>
+    <li>
+      <button
+        className="delete"
+        onClick={[Function]}
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        array
+      </span>
+      : 
+      <span
+        className="json array"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <button
+          className="add"
+          onClick={[Function]}
+          title="Insert at index 0"
+        >
+          +
+        </button>
+        <ol>
+          <li
+            value={0}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json boolean"
+              onClick={[Function]}
+            >
+              false
+            </span>
+            <button
+              className="add"
+              onClick={[Function]}
+              title="Insert at index 1"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={1}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json number"
+              onClick={[Function]}
+            >
+              1
+            </span>
+            <button
+              className="add"
+              onClick={[Function]}
+              title="Insert at index 2"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={2}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json string"
+              onClick={[Function]}
+            >
+              two
+            </span>
+            <button
+              className="add"
+              onClick={[Function]}
+              title="Insert at index 3"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={3}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json null"
+              onClick={[Function]}
+            >
+              null
+            </span>
+            <button
+              className="add"
+              onClick={[Function]}
+              title="Insert at index 4"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={4}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json object"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <button
+                className="add"
+                onClick={[Function]}
+                title="Add"
+              >
+                +
+              </button>
+              <ul />
+              <div
+                className="next"
+              />
+            </span>
+            <button
+              className="add"
+              onClick={[Function]}
+              title="Insert at index 5"
+            >
+              +
+            </button>
+          </li>
+          <li
+            className="last"
+            value={5}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json array"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <button
+                className="add"
+                onClick={[Function]}
+                title="Insert at index 0"
+              >
+                +
+              </button>
+              <ol>
+                <li
+                  className="last"
+                  value={0}
+                >
+                  <button
+                    className="delete"
+                    onClick={[Function]}
+                    title="Delete"
+                  >
+                    ×
+                  </button>
+                  <span
+                    className="json number"
+                    onClick={[Function]}
+                  >
+                    5
+                  </span>
+                  <button
+                    className="add"
+                    onClick={[Function]}
+                    title="Insert at index 1"
+                  >
+                    +
+                  </button>
+                </li>
+              </ol>
+              <div
+                className="next"
+              />
+            </span>
+            <button
+              className="add"
+              onClick={[Function]}
+              title="Insert at index 6"
+            >
+              +
+            </button>
+          </li>
+        </ol>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li>
+      <button
+        className="delete"
+        onClick={[Function]}
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        object
+      </span>
+      : 
+      <span
+        className="json object"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <button
+          className="add"
+          onClick={[Function]}
+          title="Add"
+        >
+          +
+        </button>
+        <ul>
+          <li
+            className="last"
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="key"
+            >
+              nested
+            </span>
+            : 
+            <span
+              className="json object"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <button
+                className="add"
+                onClick={[Function]}
+                title="Add"
+              >
+                +
+              </button>
+              <ul>
+                <li
+                  className="last"
+                >
+                  <button
+                    className="delete"
+                    onClick={[Function]}
+                    title="Delete"
+                  >
+                    ×
+                  </button>
+                  <span
+                    className="key"
+                  >
+                    deeply
+                  </span>
+                  : 
+                  <span
+                    className="json boolean"
+                    onClick={[Function]}
+                  >
+                    true
+                  </span>
+                </li>
+              </ul>
+              <div
+                className="next"
+              />
+            </span>
+          </li>
+        </ul>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li
+      className="last"
+    >
+      <button
+        className="delete"
+        onClick={[Function]}
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        string
+      </span>
+      : 
+      <span
+        className="json string"
+        onClick={[Function]}
+      >
+        hello
+      </span>
+    </li>
+  </ul>
+  <div
+    className="next"
+  />
+</span>
+`;
+
+exports[`Editable uncontrolled 1`] = `
+<span
+  className="json object"
+>
+  <span
+    className="toggle"
+    onClick={[Function]}
+  />
+  <button
+    className="add"
+    onClick={[Function]}
+    title="Add"
+  >
+    +
+  </button>
+  <ul>
+    <li>
+      <button
+        className="delete"
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        array
+      </span>
+      : 
+      <span
+        className="json array"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <ol>
+          <li
+            value={0}
+          >
+            <span
+              className="json boolean"
+            >
+              false
+            </span>
+          </li>
+          <li
+            value={1}
+          >
+            <span
+              className="json number"
+            >
+              1
+            </span>
+          </li>
+          <li
+            value={2}
+          >
+            <span
+              className="json string"
+            >
+              two
+            </span>
+          </li>
+          <li
+            value={3}
+          >
+            <span
+              className="json null"
+            >
+              null
+            </span>
+          </li>
+          <li
+            value={4}
+          >
+            <span
+              className="json object"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ul />
+              <div
+                className="next"
+              />
+            </span>
+          </li>
+          <li
+            className="last"
+            value={5}
+          >
+            <span
+              className="json array"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ol>
+                <li
+                  className="last"
+                  value={0}
+                >
+                  <span
+                    className="json number"
+                  >
+                    5
+                  </span>
+                </li>
+              </ol>
+              <div
+                className="next"
+              />
+            </span>
+          </li>
+        </ol>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li>
+      <button
+        className="delete"
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        object
+      </span>
+      : 
+      <span
+        className="json object"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <ul>
+          <li
+            className="last"
+          >
+            <span
+              className="key"
+            >
+              nested
+            </span>
+            : 
+            <span
+              className="json object"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ul>
+                <li
+                  className="last"
+                >
+                  <span
+                    className="key"
+                  >
+                    deeply
+                  </span>
+                  : 
+                  <span
+                    className="json boolean"
+                  >
+                    true
+                  </span>
+                </li>
+              </ul>
+              <div
+                className="next"
+              />
+            </span>
+          </li>
+        </ul>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li
+      className="last"
+    >
+      <button
+        className="delete"
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        string
+      </span>
+      : 
+      <span
+        className="json string"
+      >
+        hello
+      </span>
+    </li>
+  </ul>
+  <div
+    className="next"
+  />
+</span>
+`;
+
+exports[`Editable with metadata 1`] = `
+<span
+  className="json object"
+>
+  <span
+    className="toggle"
+    onClick={[Function]}
+  />
+  <button
+    className="add"
+    disabled={false}
+    onClick={[Function]}
+    title="Add"
+  >
+    +
+  </button>
+  <ul>
+    <li>
+      <button
+        className="delete"
+        onClick={[Function]}
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        array
+      </span>
+      : 
+      <span
+        className="json array"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <button
+          className="add"
+          disabled={false}
+          onClick={[Function]}
+          title="Insert at index 0"
+        >
+          +
+        </button>
+        <ol>
+          <li
+            value={0}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json boolean"
+              onClick={[Function]}
+            >
+              false
+            </span>
+            <button
+              className="add"
+              disabled={false}
+              onClick={[Function]}
+              title="Insert at index 1"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={1}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json number"
+              onClick={[Function]}
+            >
+              1
+            </span>
+            <button
+              className="add"
+              disabled={false}
+              onClick={[Function]}
+              title="Insert at index 2"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={2}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json string"
+              onClick={[Function]}
+            >
+              two
+            </span>
+            <button
+              className="add"
+              disabled={false}
+              onClick={[Function]}
+              title="Insert at index 3"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={3}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json null"
+              onClick={[Function]}
+            >
+              null
+            </span>
+            <button
+              className="add"
+              disabled={false}
+              onClick={[Function]}
+              title="Insert at index 4"
+            >
+              +
+            </button>
+          </li>
+          <li
+            value={4}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json object closed"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ul />
+            </span>
+            <button
+              className="add"
+              disabled={false}
+              onClick={[Function]}
+              title="Insert at index 5"
+            >
+              +
+            </button>
+          </li>
+          <li
+            className="last"
+            value={5}
+          >
+            <button
+              className="delete"
+              onClick={[Function]}
+              title="Delete"
+            >
+              ×
+            </button>
+            <span
+              className="json array closed"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ol>
+                <li
+                  className="last"
+                  value={0}
+                >
+                  <span
+                    className="json number"
+                    onClick={[Function]}
+                  >
+                    5
+                  </span>
+                </li>
+              </ol>
+            </span>
+            <button
+              className="add"
+              disabled={false}
+              onClick={[Function]}
+              title="Insert at index 6"
+            >
+              +
+            </button>
+          </li>
+        </ol>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li>
+      <button
+        className="delete"
+        onClick={[Function]}
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        object
+      </span>
+      : 
+      <span
+        className="json object closed"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <ul>
+          <li
+            className="last"
+          >
+            <span
+              className="key"
+            >
+              nested
+            </span>
+            : 
+            <span
+              className="json object"
+            >
+              <ul>
+                <li
+                  className="last"
+                >
+                  <span
+                    className="key"
+                  >
+                    deeply
+                  </span>
+                  : 
+                  <span
+                    className="json boolean"
+                    onClick={[Function]}
+                  >
+                    true
+                  </span>
+                </li>
+              </ul>
+            </span>
+          </li>
+        </ul>
+      </span>
+    </li>
+    <li
+      className="last"
+    >
+      <button
+        className="delete"
+        onClick={[Function]}
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="key"
+      >
+        string
+      </span>
+      : 
+      <span
+        className="json string"
+        onClick={[Function]}
+      >
+        hello
+      </span>
+    </li>
+  </ul>
+  <div
+    className="next"
+  >
+    <button
+      disabled={false}
+      onClick={[Function]}
+    >
+      2 more
+    </button>
+  </div>
+</span>
+`;
+
+exports[`Read-only basic 1`] = `
+<span
+  className="json object"
+>
+  <span
+    className="toggle"
+    onClick={[Function]}
+  />
+  <ul>
+    <li>
+      <span
+        className="key"
+      >
+        array
+      </span>
+      : 
+      <span
+        className="json array"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <ol>
+          <li
+            value={0}
+          >
+            <span
+              className="json boolean"
+            >
+              false
+            </span>
+          </li>
+          <li
+            value={1}
+          >
+            <span
+              className="json number"
+            >
+              1
+            </span>
+          </li>
+          <li
+            value={2}
+          >
+            <span
+              className="json string"
+            >
+              two
+            </span>
+          </li>
+          <li
+            value={3}
+          >
+            <span
+              className="json null"
+            >
+              null
+            </span>
+          </li>
+          <li
+            value={4}
+          >
+            <span
+              className="json object"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ul />
+              <div
+                className="next"
+              />
+            </span>
+          </li>
+          <li
+            className="last"
+            value={5}
+          >
+            <span
+              className="json array"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ol>
+                <li
+                  className="last"
+                  value={0}
+                >
+                  <span
+                    className="json number"
+                  >
+                    5
+                  </span>
+                </li>
+              </ol>
+              <div
+                className="next"
+              />
+            </span>
+          </li>
+        </ol>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li>
+      <span
+        className="key"
+      >
+        object
+      </span>
+      : 
+      <span
+        className="json object"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <ul>
+          <li
+            className="last"
+          >
+            <span
+              className="key"
+            >
+              nested
+            </span>
+            : 
+            <span
+              className="json object"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ul>
+                <li
+                  className="last"
+                >
+                  <span
+                    className="key"
+                  >
+                    deeply
+                  </span>
+                  : 
+                  <span
+                    className="json boolean"
+                  >
+                    true
+                  </span>
+                </li>
+              </ul>
+              <div
+                className="next"
+              />
+            </span>
+          </li>
+        </ul>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li
+      className="last"
+    >
+      <span
+        className="key"
+      >
+        string
+      </span>
+      : 
+      <span
+        className="json string"
+      >
+        hello
+      </span>
+    </li>
+  </ul>
+  <div
+    className="next"
+  />
+</span>
+`;
+
+exports[`Read-only with metadata 1`] = `
+<span
+  className="json object"
+>
+  <span
+    className="toggle"
+    onClick={[Function]}
+  />
+  <ul>
+    <li>
+      <span
+        className="key"
+      >
+        array
+      </span>
+      : 
+      <span
+        className="json array"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <ol>
+          <li
+            value={0}
+          >
+            <span
+              className="json boolean"
+            >
+              false
+            </span>
+          </li>
+          <li
+            value={1}
+          >
+            <span
+              className="json number"
+            >
+              1
+            </span>
+          </li>
+          <li
+            value={2}
+          >
+            <span
+              className="json string"
+            >
+              two
+            </span>
+          </li>
+          <li
+            value={3}
+          >
+            <span
+              className="json null"
+            >
+              null
+            </span>
+          </li>
+          <li
+            value={4}
+          >
+            <span
+              className="json object closed"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ul />
+            </span>
+          </li>
+          <li
+            className="last"
+            value={5}
+          >
+            <span
+              className="json array closed"
+            >
+              <span
+                className="toggle"
+                onClick={[Function]}
+              />
+              <ol>
+                <li
+                  className="last"
+                  value={0}
+                >
+                  <span
+                    className="json number"
+                  >
+                    5
+                  </span>
+                </li>
+              </ol>
+            </span>
+          </li>
+        </ol>
+        <div
+          className="next"
+        />
+      </span>
+    </li>
+    <li>
+      <span
+        className="key"
+      >
+        object
+      </span>
+      : 
+      <span
+        className="json object closed"
+      >
+        <span
+          className="toggle"
+          onClick={[Function]}
+        />
+        <ul>
+          <li
+            className="last"
+          >
+            <span
+              className="key"
+            >
+              nested
+            </span>
+            : 
+            <span
+              className="json object"
+            >
+              <ul>
+                <li
+                  className="last"
+                >
+                  <span
+                    className="key"
+                  >
+                    deeply
+                  </span>
+                  : 
+                  <span
+                    className="json boolean"
+                  >
+                    true
+                  </span>
+                </li>
+              </ul>
+            </span>
+          </li>
+        </ul>
+      </span>
+    </li>
+    <li
+      className="last"
+    >
+      <span
+        className="key"
+      >
+        string
+      </span>
+      : 
+      <span
+        className="json string"
+      >
+        hello
+      </span>
+    </li>
+  </ul>
+  <div
+    className="next"
+  >
+    <button
+      disabled={false}
+      onClick={[Function]}
+    >
+      2 more
+    </button>
+  </div>
+</span>
+`;
+
+exports[`Top-level array 1`] = `
+<span
+  className="json array"
+>
+  <span
+    className="toggle"
+    onClick={[Function]}
+  />
+  <button
+    className="add"
+    onClick={[Function]}
+    title="Insert at index 0"
+  >
+    +
+  </button>
+  <ol>
+    <li
+      value={0}
+    >
+      <button
+        className="delete"
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="json number"
+      >
+        1
+      </span>
+      <button
+        className="add"
+        onClick={[Function]}
+        title="Insert at index 1"
+      >
+        +
+      </button>
+    </li>
+    <li
+      value={1}
+    >
+      <button
+        className="delete"
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="json number"
+      >
+        2
+      </span>
+      <button
+        className="add"
+        onClick={[Function]}
+        title="Insert at index 2"
+      >
+        +
+      </button>
+    </li>
+    <li
+      className="last"
+      value={2}
+    >
+      <button
+        className="delete"
+        title="Delete"
+      >
+        ×
+      </button>
+      <span
+        className="json number"
+      >
+        3
+      </span>
+      <button
+        className="add"
+        onClick={[Function]}
+        title="Insert at index 3"
+      >
+        +
+      </button>
+    </li>
+  </ol>
+  <div
+    className="next"
+  />
+</span>
+`;
+
+exports[`Top-level scalar 1`] = `
+<span
+  className="json null"
+  onClick={[Function]}
+>
+  null
+</span>
+`;
