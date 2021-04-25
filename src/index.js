@@ -33,6 +33,11 @@ exports.app = express;
 const shortHash = string =>
   base64Url(hash(string)).substr(0, 8);
 
+let polyfill = '';
+fs.readFile(require.resolve('regenerator-runtime/runtime'), 'utf8', (err, data) => {
+  polyfill = data;
+});
+
 const site = (React, components, config, jsx, url) => ({
   React,
   config,
@@ -62,7 +67,7 @@ const resolveFile = (dir, file) => new Promise(resolve => {
   });
 });
 
-exports.initComponents = function initComponents(views, config) {
+const initComponents = (views, config) => {
   return site(
     React,
     Object.entries(views).reduce((views, [name, view]) => ({...views, [name]: view.component}), {}),
@@ -71,6 +76,8 @@ exports.initComponents = function initComponents(views, config) {
     url
   ).init().components;
 };
+
+exports.initComponents = initComponents;
 
 exports.router = ({
   assetsTTL = 86400,
@@ -86,7 +93,7 @@ exports.router = ({
   const script = (name, component) => {
     const code =
       name == 'site'
-        ? `window.Site = (${site})(React, {}, ${JSON.stringify(config)}, ${jsx}, ${url});`
+        ? `${polyfill}\nwindow.Site = (${site})(React, {}, ${JSON.stringify(config)}, ${jsx}, ${url});`
         : `window.Site.components[${JSON.stringify(name)}] = ${component};`;
     return babel.transformSync(code, {
       comments: dev,
@@ -155,8 +162,9 @@ exports.router = ({
       );
     };
     res.renderPage = (view, data) => {
-      const {login, token, message} = req;
+      const {token, message} = req;
       const {meta, ...props} = data || {};
+      const login = meta.login == false ? false : req.login;
       if (message) res.clearCookie(messageCookie);
       res.render(['page', view], {meta, view, login, token, message, props});
     };

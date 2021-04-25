@@ -27,8 +27,10 @@ app.use(
     dev,
     config: {},
     views: {
+      database: require('./views/database'),
       field: require('./views/field'),
       home: require('./views/home'),
+      jsonField: require('./views/jsonField'),
       login: require('./views/login'),
       register: require('./views/register')
     },
@@ -41,7 +43,9 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.renderPage('login', {meta: {title: 'Log In'}});
+  res.renderPage('login', {
+    meta: {login: false, title: 'Log In'}
+  });
 });
 
 app.post('/login', async (req, res) => {
@@ -61,7 +65,9 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  res.renderPage('register', {meta: {title: 'Register'}});
+  res.renderPage('register', {
+    meta: {login: false, title: 'Register'}
+  });
 });
 
 app.post('/register', async (req, res) => {
@@ -78,6 +84,25 @@ app.post('/register', async (req, res) => {
     res.logIn({name, email}).redirect('/');
   } catch (e) {
     res.error(e.message).redirect(req.path);
+  }
+});
+
+app.get('/db', async (req, res) => {
+  if (req.headers.accept == 'application/json') {
+    // TODO: limit, after
+    const data = await db.get(req.path.substr(3).split('/').map(decodeURIComponent), 'immediates');
+    res.json({data, remaining: 0});
+  } else {
+    const data = await db.get([], 'immediates');
+    res.renderPage('database', {
+      meta: {title: 'Database'},
+      value: {
+        data: Object.entries(data).reduce((object, [key, data]) => ({
+          ...object,
+          [key]: data && typeof data == 'object' ? {data, remaining: true} : data
+        }), {})
+      }
+    });
   }
 });
 

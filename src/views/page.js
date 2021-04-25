@@ -37,6 +37,26 @@ exports.styles = {
       background: '#e0e0e0'
     },
   },
+  '.user': {
+    float: 'right',
+    textAlign: 'right',
+    summary: {
+      cursor: 'pointer',
+      display: 'inline-block',
+      outline: 'none',
+      padding: '6px 12px',
+      userSelect: 'none',
+    },
+    ul: {
+      listStyle: 'none',
+      margin: 0,
+      padding: 0,
+      a: {
+        display: 'block',
+        padding: '2px 12px',
+      }
+    }
+  },
   '.message': {
     margin: '20px 0',
     '&.error, &.success': {
@@ -50,15 +70,20 @@ exports.styles = {
   }
 };
 exports.component = ({components, jsx}) => ({login, message, view, props}) => {
+  const {menu} = components;
   return jsx([
-    ['h1', ['a', {href: '/'}, 'WebApp']],
-    view != 'login' && view != 'register' && [
-      login && ['p', `Welcome, ${login.name}`],
-      ['div', login
-        ? ['a', {className: 'button', href: '/logout'}, 'Log Out']
+    login !== false && ['div', {className: 'user'},
+      login
+        ? ['details',
+            ['summary', login.name],
+            ['ul',
+              ['li', ['a', {href: '/user'}, 'Account Info']],
+              ['li', ['a', {href: '/logout'}, 'Log Out']]
+            ],
+          ]
         : ['a', {className: 'button', href: '/login'}, 'Log In']
-      ]
     ],
+    ['h1', ['a', {href: '/'}, 'WebApp']],
     message && ['div', {className: `message ${message.type}`}, message.text],
     [components[view], props]
   ]);
