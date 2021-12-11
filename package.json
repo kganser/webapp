@@ -24,15 +24,15 @@
     "chokidar": "^3.3.1",
     "cookie-parser": "^1.4.4",
     "express": "^4.17.1",
-    "node-fetch": "2.6.0",
+    "node-fetch": "^3.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "sqlite3": "^4.1.1"
+    "sqlite3": "npm:@vscode/sqlite3@^5.0.7"
   },
   "devDependencies": {
-    "eslint": "^6.8.0",
+    "eslint": "^8.4.1",
     "husky": "^3.1.0",
-    "jest": "^25.5.4",
+    "jest": "^27.4.4",
     "prettier": "^1.19.1",
     "react-test-renderer": "^17.0.1"
   },

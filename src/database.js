@@ -328,7 +328,7 @@ exports.open = (database, options) => {
     });
 
     const txn = {
-      get: op(false, async (store, path, cursor, exists) => {
+      get: op(false, async (store, path, cursor) => {
         const result = await getOne(db, store, path);
         if (result) return get(db, store, result, path, [], normalizeCursor(cursor));
       }),

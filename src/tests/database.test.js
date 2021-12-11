@@ -155,7 +155,7 @@ test('cursor function', async () => {
     [['array', 3], false],
     [['array', 3, 'object'], false],
     [3, {object: {}}],
-    [null, ['elem', undefined, 3]]
+    [null, ['elem', /* undefined */, 3]]
   ]);
   expect(result).toEqual({array: {data: ['elem', undefined, 3]}}); // array gaps
 });
